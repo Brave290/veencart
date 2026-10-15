@@ -27,6 +27,13 @@ export function PublicHeader({ dark = false }: PublicHeaderProps) {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    if (menuOpen) window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [menuOpen]);
   const solid = scrolled || !dark;
   const foreground = solid ? 'text-content' : 'text-white';
   return (
@@ -46,12 +53,14 @@ export function PublicHeader({ dark = false }: PublicHeaderProps) {
             </button>
           </div>
         </div>
-        {menuOpen ? (
-          <nav id="mobile-navigation" aria-label="Mobile primary" className="mx-3 mt-2 grid gap-1 rounded-3xl border border-line bg-surface p-3 text-content shadow-popover md:hidden">
-            {links.map((link) => <Link className="rounded-2xl px-4 py-3 font-medium hover:bg-surface-muted" href={link.href} key={link.href} onClick={() => setMenuOpen(false)}>{link.label}</Link>)}
-            <Link className={buttonVariants({ size: 'lg', className: 'mt-2' })} href="/book" onClick={() => setMenuOpen(false)}>Book a delivery <ArrowRight aria-hidden="true" className="size-4" /></Link>
-          </nav>
-        ) : null}
+        <div className={`fixed inset-0 z-[60] md:hidden ${menuOpen ? 'visible' : 'invisible'}`} aria-hidden={!menuOpen}>
+          <button type="button" aria-label="Close navigation" onClick={() => setMenuOpen(false)} className={`absolute inset-0 cursor-default bg-[#071C24]/55 transition-opacity duration-base ${menuOpen ? 'opacity-100' : 'opacity-0'}`} />
+          <aside id="mobile-navigation" role="dialog" aria-modal="true" aria-label="Mobile navigation" className={`absolute inset-y-0 right-0 flex w-[min(88vw,22rem)] flex-col border-l border-line bg-surface p-6 text-content shadow-dialog transition-transform duration-moderate ease-enter ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className="flex items-center justify-between border-b border-line-subtle pb-5"><p className="text-xs font-bold uppercase tracking-[0.2em] text-content-subtle">Menu</p><button type="button" aria-label="Close navigation" onClick={() => setMenuOpen(false)} className="grid size-10 place-items-center rounded-full border border-line-strong text-content-muted hover:border-primary hover:text-primary"><X aria-hidden="true" className="size-5" /></button></div>
+            <nav aria-label="Mobile primary" className="mt-6 grid gap-2">{links.map((link) => <Link className="rounded-2xl px-4 py-4 text-lg font-semibold tracking-[-0.02em] hover:bg-surface-muted" href={link.href} key={link.href} onClick={() => setMenuOpen(false)}>{link.label}</Link>)}</nav>
+            <div className="mt-auto border-t border-line-subtle pt-6"><Link className={buttonVariants({ size: 'lg', className: 'w-full' })} href="/book" onClick={() => setMenuOpen(false)}>Book a delivery <ArrowRight aria-hidden="true" className="size-4" /></Link><p className="mt-4 text-center text-xs leading-5 text-content-subtle">Clearer movement for people, parcels and growing businesses.</p></div>
+          </aside>
+        </div>
       </header>
     </div>
   );
