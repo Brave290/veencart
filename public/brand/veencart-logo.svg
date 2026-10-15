@@ -1,9 +1,16 @@
-<svg width="760" height="220" viewBox="0 0 760 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="10" y="10" width="200" height="200" rx="56" fill="#0B4F4A"/>
-  <path d="M48 57H66L76 126C77.6 137 87.2 145 98.4 145H151C161.5 145 170.5 137.9 172.9 127.7L181 88H80" stroke="#F4773B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M88 94H163L155 128H94L88 94Z" fill="#F4773B"/>
-  <circle cx="101" cy="169" r="12" fill="#F4773B"/><circle cx="154" cy="169" r="12" fill="#F4773B"/>
-  <path d="M105 47L117 59L136 39" stroke="#DCEFE8" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="255" y="125" fill="#202927" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="800" letter-spacing="-5">veen<tspan fill="#087E67">cart</tspan></text>
-  <text x="260" y="168" fill="#5F6C68" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="8">MOVE WITH CARE</text>
+<svg width="920" height="260" viewBox="0 0 920 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="130" cy="130" r="119" fill="white" stroke="#0A8F8E" stroke-width="7"/>
+  <path d="M57.7 49.7A119 119 0 0 1 130 11c19.1 0 37.4 4.9 53.1 12.3" stroke="#0A8F8E" stroke-width="7" stroke-linecap="round"/>
+  <path d="M203.5 56.8A119 119 0 0 1 249 130c0 19.5-4.8 37.7-12.7 53.9" stroke="#F47A28" stroke-width="7" stroke-linecap="round"/>
+  <path d="M202 200.6A119 119 0 0 1 130 249c-18.7 0-36.6-4.5-52-12.1" stroke="#F47A28" stroke-width="7" stroke-linecap="round"/>
+  <path d="M56.8 202.7A119 119 0 0 1 11 130c0-20.2 5.1-39.2 13.9-55.7" stroke="#0A8F8E" stroke-width="7" stroke-linecap="round"/>
+  <path d="M62 91h45.5l20.1 27-19 10.7-20-17.8H62l23.4 12.3-27-2 28.2 10.6-27.8-.8 31.8 10.3-30.2 2 42.8 6.7 25.7 20.6-16.3-35.2L62 91Z" fill="#069392"/>
+  <path d="m122.2 168.9 37.6-86.8 21.8-13-13.9 32.8 29.7-18.2-54.6 77.6 7.5-32.8-28.1 40.4Z" fill="#F47A28"/>
+  <path d="M118 160h41.5l-4 11.1h-32.1L118 160Z" fill="#0A8F8E" opacity=".9"/>
+  <path d="M100.4 185.7h58.4v16.2h-58.4z" fill="#069392"/>
+  <path d="M90 185.7h17.8v16.2H90zM158.1 185.7h17.4v16.2h-17.4z" fill="#069392"/>
+  <path d="M83 192.7h98" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <text x="300" y="137" fill="#202927" font-family="Arial, Helvetica, sans-serif" font-size="94" font-weight="800" letter-spacing="2">VEEN<tspan fill="#F47A28">CART</tspan></text>
+  <text x="306" y="183" fill="#0A8F8E" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" letter-spacing="12">LOGISTICS</text>
+  <path d="M306 208H698" stroke="#F47A28" stroke-width="5" stroke-linecap="round"/>
 </svg>

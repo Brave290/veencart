@@ -1,9 +1,24 @@
-# Veencart brand assets
+# Veencart Logistics brand assets
 
-The logo is a cart mark with a check gesture: a simple symbol for commerce, movement and a completed handoff.
+This identity is based on the supplied Veencart Logistics reference mark. The professional vector redraw preserves the recognizable elements while improving clarity at web, mobile and motion sizes:
 
-- `veencart-logo.svg` — horizontal lockup for light surfaces.
-- `veencart-mark.svg` — square mark for app icons, avatars and favicons.
-- `veencart-logo-motion.mp4` — centered horizontal splash animation; mark and wordmark stay on one lane throughout. 1920×1080, 30fps, 4.53s, silent.
-- Core palette: deep teal `#0B4F4A`, primary teal `#087E67`, cart orange `#F4773B`, ink `#202927`, warm white `#F7F8F5`.
-- Use the orange only as a brand accent or with ink text; use `#B2551F` when white text is required.
+- Circular badge with alternating teal/orange route ring.
+- Teal speed-wing and orange forward-motion V.
+- Small delivery-truck cue inside the badge.
+- Explicit `VEENCART LOGISTICS` lockup for category clarity.
+
+## Files
+
+- `veencart-logo.svg` — horizontal lockup for websites, documents and presentations.
+- `veencart-mark.svg` — circular badge for app icons, avatars, favicons and social profiles.
+- `veencart-logo-motion.mp4` — centered horizontal logistics splash animation; badge and wordmark stay on one lane throughout. 1920×1080, 30fps, 4.53s, silent.
+
+## Core palette
+
+- Teal: `#0A8F8E`
+- Orange: `#F47A28`
+- Deep splash navy: `#071C24`
+- Ink: `#202927`
+- Warm white: `#F7F8F5`
+
+The orange is used as the forward-motion accent, not as a large body-text surface. Keep the badge and wordmark together whenever the full lockup is available; use the circular mark alone only where space is constrained.

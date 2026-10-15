@@ -8,36 +8,37 @@ type VeencartLogoProps = {
   label?: string;
 };
 
-export function VeencartLogo({
-  href,
-  compact = false,
-  className,
-  label = 'Veencart home',
-}: VeencartLogoProps) {
+function LogisticsBadge({ className }: { className: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 64 64" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="30" fill="white" stroke="#0A8F8E" strokeWidth="1.7" />
+      <path d="M13.7 11.7A30 30 0 0 1 32 2c4.8 0 9.4 1.1 13.4 3.1" stroke="#0A8F8E" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M50.4 13.4A30 30 0 0 1 62 32c0 4.9-1.2 9.5-3.2 13.6" stroke="#F47A28" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M49.9 50.3A30 30 0 0 1 32 62c-4.7 0-9.2-1.1-13.1-3" stroke="#F47A28" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M13.4 50.6A30 30 0 0 1 2 32c0-5.1 1.3-9.9 3.5-14.1" stroke="#0A8F8E" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M15 22.3h11.5l5.1 6.8-4.8 2.7-5.1-4.5H15l5.9 3.1-6.8-.5 7.1 2.7-7-.2 8 2.6-7.6.5 10.8 1.7 6.5 5.2-4.1-8.9-13.8-9.2Z" fill="#069392" />
+      <path d="M30.2 41.9 39.7 20l5.5-3.3-3.5 8.3 7.5-4.6-13.8 19.6 1.9-8.3-7.1 10.2Z" fill="#F47A28" />
+      <path d="M29.1 39.7h10.5l-1 2.8h-8.1l-1.4-2.8Z" fill="#0A8F8E" opacity=".9" />
+      <path d="M24.6 46.2h14.8v4.1H24.6z" fill="#069392" />
+      <path d="M22 46.2h4.5v4.1H22zM39.4 46.2h4.4v4.1h-4.4z" fill="#069392" />
+      <path d="M20.2 48h24.8" stroke="white" strokeWidth=".9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function VeencartLogo({ href, compact = false, className, label = 'Veencart home' }: VeencartLogoProps) {
   const logo = (
     <span className={cn('inline-flex items-center gap-2.5', className)} aria-label={label}>
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 48 48"
-        className={compact ? 'size-10' : 'size-11'}
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect width="48" height="48" rx="15" fill="currentColor" />
-        <path d="M11 14h4.2l2.45 15.1a3.2 3.2 0 0 0 3.15 2.7h13.1a3.2 3.2 0 0 0 3.1-2.42L39 20.2H18.2" stroke="#F4773B" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M20.6 21.5h13.8l-1.6 6.3H21.7l-1.1-6.3Z" fill="#F4773B" />
-        <circle cx="22.5" cy="36.3" r="2.4" fill="#F4773B" />
-        <circle cx="34.2" cy="36.3" r="2.4" fill="#F4773B" />
-        <path d="M23.4 11.5 26 14l4.1-4.2" stroke="#DCEFE8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <LogisticsBadge className={compact ? 'size-10' : 'size-11'} />
       {!compact ? (
         <span className="flex flex-col leading-none">
-          <span className="text-[1.1rem] font-extrabold tracking-[-0.045em] text-content">veen<span className="text-primary">cart</span></span>
-          <span className="mt-1 text-[0.58rem] font-bold uppercase tracking-[0.2em] text-content-muted">move with care</span>
+          <span className="text-[1.05rem] font-extrabold tracking-[0.02em] text-content">VEEN<span className="text-[#F47A28]">CART</span></span>
+          <span className="mt-1 text-[0.55rem] font-bold uppercase tracking-[0.28em] text-primary">Logistics</span>
         </span>
       ) : null}
     </span>
   );
-
   return href ? <Link href={href}>{logo}</Link> : logo;
 }
+
+export { LogisticsBadge };
