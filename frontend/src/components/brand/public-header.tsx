@@ -46,7 +46,7 @@ export function PublicHeader({ dark = false }: PublicHeaderProps) {
             <ThemeToggle inverse={!solid} />
             <Link className={buttonVariants({ size: 'sm', className: solid ? '' : 'bg-white text-brand-900 hover:bg-white/90' })} href="/book">Book a delivery <ArrowRight aria-hidden="true" className="size-4" /></Link>
           </nav>
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="ml-auto flex items-center gap-2 md:hidden">
             <ThemeToggle inverse={!solid} />
             <button type="button" aria-expanded={menuOpen} aria-controls="mobile-navigation" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} onClick={() => setMenuOpen((open) => !open)} className={`grid size-10 place-items-center rounded-full border ${solid ? 'border-line-strong' : 'border-white/20'}`}>
               {menuOpen ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
