@@ -1,0 +1,153 @@
+# ============================================================================
+# Veencart Logistics — end-to-end gate (Playwright)
+# ----------------------------------------------------------------------------
+# Separate from ci.yml because it needs a browser and a production server, and
+# because its failure modes are different. A red e2e run means "the thing a
+# customer actually does is broken", which is not the same signal as "the code
+# does not compile" and should not be buried in a 25-minute job.
+#
+# WHAT THIS ACTUALLY PROVES
+# These specs run against `next start` serving a real `next build`, not the dev
+# server. So a green run also proves the production bundle boots and serves.
+# That is why the build step below is not optional and not cached from a
+# previous job — an e2e pass against a stale or absent build is a fiction.
+#
+# BROWSERS: chromium only, deliberately. playwright.config.ts declares two
+# projects — `chromium` and `mobile` (a Pixel 7 device descriptor) — and both
+# are Chromium. Installing the whole browser matrix would roughly triple the
+# install time to test nothing new.
+#
+# THE NETWORK SHIM — READ THIS BEFORE "CLEANING UP" THE env BLOCK
+# scripts/sandbox-network-shim.cjs exists because the development sandbox this
+# project was written in blocks the `uv_interface_addresses` syscall that
+# `next start` calls at boot, which makes the production server unstartable
+# there. On a normal runner that syscall works and the shim is not needed.
+#
+# The trap: playwright.config.ts sets
+#     VEENCART_ALLOW_NETWORK_SHIM: process.env.VEENCART_ALLOW_NETWORK_SHIM ?? "1"
+# so UNSETTING the variable ENABLES the shim. Deleting the env block below would
+# switch it on, not off. It has to be set to "0" explicitly, which both makes
+# the config run plain `npx next start` and makes the shim module return early
+# on its own opt-in guard (`if (process.env.VEENCART_ALLOW_NETWORK_SHIM !== "1")`).
+# Leave this line alone.
+# ============================================================================
+
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+  # A green "workflow_dispatch" run is the fastest way to answer "is the suite
+  # itself broken, or is the code broken?" without pushing anything.
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    name: Playwright against production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # See the banner above: "0" disables the sandbox shim. Removing this line
+      # re-enables it.
+      VEENCART_ALLOW_NETWORK_SHIM: "0"
+      # playwright.config.ts reads PORT; it defaults to 3100. Stated explicitly
+      # so the port is a declared part of this job rather than a default that
+      # can drift when the config changes.
+      PORT: "3100"
+      CI: "true"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies from the lockfile
+        run: npm ci
+
+      # Same placeholder block as ci.yml, duplicated on purpose: a shared
+      # composite action would have to live in .github/actions/, which is
+      # outside this change's file ownership. Duplication is the cheaper mistake
+      # here — if these two lists drift, CI is the one that fails loudly.
+      #
+      # These are NOT the values the deployed app runs with. They exist so that
+      # `next build` finds the variables it reads. A green e2e run therefore
+      # says the bundle builds and the server boots; it does NOT say the
+      # Paystack or Supabase integration works against real credentials. Those
+      # journeys are not covered yet (see the scope note in
+      # playwright.config.ts) and a test that silently skips for want of a key
+      # is worse than no test.
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3100"
+          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "ci-placeholder-anon-key"
+          SUPABASE_SERVICE_ROLE_KEY: "ci-placeholder-service-role-key"
+          SUPABASE_DB_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: "pk_test_placeholder"
+          PAYSTACK_SECRET_KEY: "sk_test_placeholder"
+          PAYSTACK_WEBHOOK_SECRET: "ci-placeholder-webhook-secret"
+          PAYSTACK_MIN_KOBO: "5000"
+          R2_ACCOUNT_ID: "00000000000000000000000000000000"
+          R2_ACCESS_KEY_ID: "ci-placeholder-access-key-id"
+          R2_SECRET_ACCESS_KEY: "ci-placeholder-secret-access-key"
+          R2_S3_ENDPOINT: "https://00000000000000000000000000000000.r2.cloudflarestorage.com"
+          R2_BUCKET_PUBLIC_MEDIA: "ci-placeholder-public-media"
+          R2_BUCKET_PRIVATE_FILES: "ci-placeholder-private-files"
+          R2_PUBLIC_MEDIA_BASE_URL: "https://media.example.invalid"
+          RESEND_API_KEY: "re_ci_placeholder"
+          EMAIL_FROM: "CI Build <no-reply@example.invalid>"
+          UPSTASH_REDIS_REST_URL: "https://placeholder.upstash.io"
+          UPSTASH_REDIS_REST_TOKEN: "ci-placeholder-upstash-token"
+          SENTRY_DSN: "https://ci-placeholder@o0.ingest.sentry.io/0"
+
+      # --with-deps installs the browser AND the apt packages it needs. Without
+      # the deps half, Chromium starts and then dies on a missing shared
+      # library on a fresh runner image. `--with-deps` runs apt, so it needs
+      # the runner's default token; the job's `permissions: contents: read`
+      # does not restrict that, and correctly so — it grants no repo write.
+      - name: Install Chromium and its system dependencies
+        run: npx playwright install --with-deps chromium
+
+      # Playwright's own `webServer` block boots `next start` and waits for
+      # http://127.0.0.1:3100 before running the first test. Nothing here needs
+      # to start a server by hand.
+      #
+      # A failure prints the server's stdout/stderr inline (stdout: "pipe" in
+      # the config), so a boot error — a bad build, a port already in use — is
+      # visible in this step rather than surfacing as 44 mystery test failures.
+      - name: Run Playwright suite
+        run: npm run test:e2e
+
+      # Artifacts are the difference between "e2e failed" and "here is the
+      # screenshot, the video and the trace at the moment it failed".
+      # trace: "retain-on-failure" means this is a few MB, not a recording of
+      # every run. --if-no-files-found: ignore because a green run legitimately
+      # produces no artifact directory, and an upload step that fails on a
+      # missing directory would turn a pass into a red build.
+      - name: Upload Playwright report and failure artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore

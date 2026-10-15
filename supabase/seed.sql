@@ -105,8 +105,13 @@ insert into public.booking_items (booking_id, description, quantity, weight_kg) 
   ('50000000-0000-0000-0000-000000000001', 'Demo carton of books', 2, 3.500);
 
 insert into public.quotes
-  (id, booking_id, quote_reference, status, service_type, subtotal_minor, discount_minor, surcharge_minor, vat_minor, total_minor, currency, valid_until, created_by) values
-  ('60000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 'VCQ-DEMO-0001', 'accepted', 'next_day', 350000, 0, 0, 0, 350000, 'NGN', now() + interval '7 days', '00000000-0000-0000-0000-000000000002');
+  (id, booking_id, quote_reference, status, service_type, subtotal_minor, discount_minor, surcharge_minor, vat_minor, total_minor, currency, valid_until, created_by, accepted_at, accepted_by) values
+  ('60000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 'VCQ-DEMO-0001', 'accepted', 'next_day', 350000, 0, 0, 0, 350000, 'NGN', now() + interval '7 days', '00000000-0000-0000-0000-000000000002', now() - interval '2 hours', '00000000-0000-0000-0000-00000000000a'),
+  -- Booking B has an ACCEPTED QUOTE at 200000. This is required, not decorative:
+  -- the payments.derive_payment_amount trigger refuses to create a payment with
+  -- no confirmed amount behind it, so a payment row cannot exist without a
+  -- quote to justify it. That invariant is the point.
+  ('60000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000002', 'VCQ-DEMO-0002', 'accepted', 'same_day', 200000, 0, 0, 0, 200000, 'NGN', now() + interval '7 days', '00000000-0000-0000-0000-000000000002', now() - interval '1 hour', '00000000-0000-0000-0000-00000000000b');
 
 insert into public.quote_items (quote_id, label, description, quantity, unit_amount_minor, amount_minor, currency, sort_order) values
   ('60000000-0000-0000-0000-000000000001', 'Base charge',   'Fictional base fee',      1, 250000, 250000, 'NGN', 1),
@@ -184,7 +189,7 @@ insert into public.product_order_items (product_order_id, product_id, sku, produ
 insert into public.guest_access_tokens
   (id, token_hash, purpose, booking_id, expires_at) values
   ('d0000000-0000-0000-0000-000000000001',
-   '6b1f6d9a1f2e9c3d4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8f90123',
+   '3137c5fbe8bf476d6461d89e9c8ce7219997cf55031e53485dad3859a8d045b5',
    'guest_booking', '50000000-0000-0000-0000-000000000001', now() + interval '7 days');
 
 -- ----------------------------------------------------------------------------

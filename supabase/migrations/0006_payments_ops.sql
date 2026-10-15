@@ -213,43 +213,69 @@ create table if not exists public.refunds (
   constraint refunds_requester_check check (requested_by is not null)
 );
 
--- A refund may never exceed the amount still refundable on its payment.
+-- A refund may never take the payment below what is still refundable.
 --
--- This is a TRIGGER, not a CHECK constraint: PostgreSQL forbids subqueries in
--- CHECK expressions, and "how much is left on THIS payment" is necessarily a
--- cross-row question. Enforced at the database so it holds for every writer,
--- including reconciliation jobs and any future import path.
+-- THIS IS A CUMULATIVE CHECK AGAINST A RUNNING TOTAL, not a comparison with a
+-- static column. An earlier version of this trigger compared
+-- new.amount_minor to payments.refundable_amount_minor and that was WRONG: that
+-- column is set once when the payment settles and nothing ever decrements it, so
+-- three separate refunds of 350,000 against a 350,000 payment were each
+-- individually "within the limit" and together refunded 1,050,000. The comment
+-- claimed the limit was enforced, so the next engineer would not look again.
+-- Proven by execution, not by inspection.
+--
+-- Two parts make it correct:
+--   1. SUM the refunds already recorded against this payment, counting only
+--      those that hold or have taken money (requested, processing, succeeded).
+--      A cancelled or failed refund released its hold and must not count.
+--   2. `for update` locks the payment ROW, so two concurrent refunds serialise.
+--      Without the lock both read the same total and both pass — a check that is
+--      correct in isolation and useless under concurrency, which is the whole
+--      reason a refund path needs a lock.
 create or replace function public.enforce_refund_within_refundable()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
 declare
-  v_refundable bigint;
-  v_currency   char(3);
+  v_refundable    bigint;
+  v_already       bigint := 0;
+  v_currency      char(3);
 begin
+  -- Lock first, aggregate second. Taking the lock before reading the running
+  -- total is what closes the race.
   select p.refundable_amount_minor, p.currency
     into v_refundable, v_currency
-  from public.payments p
-  where p.id = new.payment_id;
+    from public.payments p
+   where p.id = new.payment_id
+     for update;
 
   if not found then
     raise exception 'Payment % no longer exists.', new.payment_id
       using errcode = '23503';
   end if;
 
-  -- No refundable balance recorded yet (e.g. settled without one) blocks any
-  -- refund rather than defaulting to "unlimited".
+  select coalesce(sum(r.amount_minor), 0)
+    into v_already
+    from public.refunds r
+   where r.payment_id = new.payment_id
+     and r.status in ('requested', 'processing', 'succeeded')
+     -- Exclude the row being updated so re-saving a draft refund does not
+     -- count itself against its own ceiling.
+     and r.id is distinct from new.id;
+
+  -- No refundable balance recorded (e.g. settled without one) blocks any refund
+  -- rather than defaulting to "unlimited".
   if v_refundable is null then
     raise exception 'Payment % has no recorded refundable balance.', new.payment_id
       using errcode = '23514',
             hint = 'Reconcile the payment before issuing refunds against it.';
   end if;
 
-  if new.amount_minor > v_refundable then
+  if new.amount_minor > (v_refundable - v_already) then
     raise exception
-      'Refund % kobo exceeds refundable balance % kobo on payment %.',
-      new.amount_minor, v_refundable, new.payment_id
+      'Refund of % kobo exceeds the remaining refundable balance of % kobo on payment % (% already refunded).',
+      new.amount_minor, v_refundable - v_already, new.payment_id, v_already
       using errcode = '23514';
   end if;
 
@@ -266,13 +292,131 @@ $$;
 
 drop trigger if exists refunds_within_refundable_guard on public.refunds;
 create trigger refunds_within_refundable_guard
-  before insert or update of amount_minor, payment_id on public.refunds
+  before insert or update of amount_minor, payment_id, status on public.refunds
   for each row execute function public.enforce_refund_within_refundable();
 
 create index if not exists refunds_payment_idx on public.refunds (payment_id, created_at desc);
 create index if not exists refunds_status_idx on public.refunds (status, created_at desc);
 create unique index if not exists refunds_provider_reference_idx
   on public.refunds (provider, provider_reference) where provider_reference is not null;
+
+-- ----------------------------------------------------------------------------
+-- 3b. Server-derived payment amount — the control that was missing
+-- ----------------------------------------------------------------------------
+-- WHAT WAS WRONG
+-- `payments` carried both `amount_minor` and `expected_amount_minor`, and the
+-- only integrity rule was the CHECK that they were EQUAL. A client inserting a
+-- payment for its own booking could therefore submit amount_minor = 1 together
+-- with expected_amount_minor = 1 and satisfy every rule in the schema. Nothing
+-- derived the amount from the accepted quote or the order total. The RLS policy
+-- comment claimed "the amount is pinned to the server-computed value", which was
+-- false, and a policy comment that asserts a guarantee the policy does not
+-- provide is worse than no comment.
+--
+-- WHY A TRIGGER AND NOT A POLICY
+-- A policy can compare a submitted value to a trusted one, but it cannot
+-- REPLACE the submitted value. `amount_minor = (select total from quotes)`
+-- would still permit a client who supplies a matching fake total. Overwriting
+-- the column is the only construct that makes the trusted value authoritative.
+--
+-- The amount is therefore always OVERWRITTEN from the payable record:
+--   booking      -> the ACCEPTED quote's total_minor
+--   product_order-> product_orders.total_minor
+-- If no trusted total can be found the INSERT is rejected. There is no path
+-- where a client-chosen number survives into a payment row.
+create or replace function public.derive_payment_amount()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_total    bigint;
+  v_currency char(3);
+begin
+  if new.payable_kind = 'booking' then
+    -- The accepted quote is the authority, not the most recent one. A later
+    -- draft or expired quote must not become the charge.
+    select q.total_minor, q.currency
+      into v_total, v_currency
+      from public.quotes q
+     where q.booking_id = new.booking_id
+       and q.status = 'accepted'
+     order by q.accepted_at desc nulls last
+     limit 1;
+
+  else
+    select o.total_minor, o.currency
+      into v_total, v_currency
+      from public.product_orders o
+     where o.id = new.product_order_id;
+  end if;
+
+  if v_total is null then
+    raise exception
+      'Cannot create a payment: no confirmed amount exists for this %.',
+      new.payable_kind
+      using errcode = '23514',
+            hint = 'A booking payment requires an accepted quote; an order payment requires a priced order.';
+  end if;
+
+  if v_total <= 0 then
+    raise exception
+      'Refusing to create a payment of % kobo: the amount must be positive.',
+      v_total
+      using errcode = '23514';
+  end if;
+
+  new.amount_minor         := v_total;
+  new.expected_amount_minor := v_total;
+  new.currency             := v_currency;
+  new.expected_currency    := v_currency;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists payments_derive_amount on public.payments;
+create trigger payments_derive_amount
+  before insert on public.payments
+  for each row execute function public.derive_payment_amount();
+
+-- Payment amounts are IMMUTABLE once the row exists.
+--
+-- A dispatcher (or any browser principal with UPDATE) could otherwise rewrite a
+-- settled payment from 350,000 to 1, silently corrupting a historical receipt
+-- while satisfying the amount-consistency CHECK by changing both columns in the
+-- same statement. A policy cannot stop this — it cannot tell a reconciliation
+-- job from a hijacked session — so the durable control is a trigger.
+create or replace function public.freeze_payment_amount()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.amount_minor           is distinct from old.amount_minor
+     or new.expected_amount_minor is distinct from old.expected_amount_minor
+     or new.currency             is distinct from old.currency
+     or new.expected_currency    is distinct from old.expected_currency
+  then
+    raise exception
+      'Payment amounts are immutable once created (payment %). Create a new payment instead of editing this one.',
+      old.id
+      using errcode = '42501',
+            hint = 'Adjust via a refund against the original payment, never by editing it.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists payments_freeze_amount on public.payments;
+create trigger payments_freeze_amount
+  before update on public.payments
+  for each row execute function public.freeze_payment_amount();
+
+revoke all on function public.derive_payment_amount() from public;
+grant execute on function public.derive_payment_amount() to service_role, veencart_service;
+revoke all on function public.freeze_payment_amount() from public;
+grant execute on function public.freeze_payment_amount() to service_role, veencart_service;
 
 -- ----------------------------------------------------------------------------
 -- 4. Notification outbox

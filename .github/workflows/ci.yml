@@ -1,0 +1,183 @@
+# ============================================================================
+# Veencart Logistics — CI verification gate
+# ----------------------------------------------------------------------------
+# Runs on every push to main and every PR targeting main. Any failing step fails
+# the job; there is no `continue-on-error` and no `|| true` anywhere in this
+# file, so a red build genuinely means red.
+#
+# The gate order is deliberate — cheapest and most local first, so a broken
+# import is reported in seconds rather than after a five-minute test run:
+#
+#   typecheck -> lint -> contrast -> db:verify -> test -> build -> secret guard
+#
+# `npm run check` chains the first five locally and is the equivalent command a
+# developer runs before pushing. CI splits them into separate steps so the
+# failing gate is named in the job log instead of inferred from an `&&` chain.
+#
+# NO CREDENTIALS ARE REQUIRED FOR THIS WORKFLOW. That is a property of the
+# project, not an oversight:
+#   - `db:verify` and `test` run every migration against PGlite (real
+#     PostgreSQL compiled to WASM), so no Supabase instance is contacted.
+#   - `check:contrast` is pure arithmetic over the token table.
+#   - `build` is given non-secret placeholders (see the build step) so that a
+#     payment key can never exist in CI's environment or in a build log.
+# A gate that needs a secret to run is a gate nobody runs.
+# ============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same ref makes the in-flight run irrelevant. Saving the
+# runner minutes is a side effect; the real point is that the check that people
+# wait on is the check for the code that is actually there.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# This workflow reads the repository. It never writes, comments, publishes or
+# deploys. There is no deploy job here by design — see docs/DEPLOYMENT.md.
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: Verification gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      # Pinned to the commit the v4 tag currently resolves to, not to `@v4`.
+      # A tag is mutable: whoever controls the tag can change the code this
+      # workflow runs, with this repository's read access and its env block. A
+      # commit SHA cannot move, so bumping these is a reviewed, visible diff.
+      # To move to a new minor version, change the SHA and the comment together.
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          # package.json engines requires >=22.0.0. Pinning the major keeps the
+          # local toolchain and CI in agreement on the language and runtime.
+          node-version: "22"
+          # Caches the npm download cache, keyed on package-lock.json. This
+          # caches DEPENDENCIES, not .next/ — a restored build output would be a
+          # build nobody performed, which is the thing the build step exists to
+          # prevent.
+          cache: npm
+
+      # `npm ci`, never `npm install`. `ci` installs exactly what the lockfile
+      # says and fails if package.json and package-lock.json have drifted apart.
+      # That failure is the point: a lockfile that does not describe the
+      # manifest means nobody knows what is being deployed.
+      - name: Install dependencies from the lockfile
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # A WCAG 2.1 AA regression fails the build. Design regressions are
+      # invisible in review and permanent in production.
+      - name: Contrast gate (WCAG 2.1 AA)
+        run: npm run check:contrast
+
+      # Executes all 7 migration files against real PostgreSQL (PGlite) and
+      # prints the schema inventory. A migration that does not apply here will
+      # not apply on Supabase either.
+      - name: Verify migrations
+        run: npm run db:verify
+
+      # 62 tests: RLS isolation with real role switching, plus the motion
+      # contract. Slow on first run (PGlite boots a WASM Postgres) — hence the
+      # job timeout above.
+      - name: Unit and integration tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
+        # Placeholders, not secrets. A production build needs the variables to
+        # EXIST; it never contacts Supabase, Paystack, R2, Resend or Sentry.
+        # Putting real credentials here would mean a live Paystack key inside
+        # GitHub Actions, readable by anyone who can open a pull request.
+        #
+        # `.invalid` is a reserved TLD (RFC 2606) that can never resolve, so a
+        # placeholder that escapes into a request fails loudly instead of
+        # reaching somebody else's host.
+        env:
+          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "ci-placeholder-anon-key"
+          SUPABASE_SERVICE_ROLE_KEY: "ci-placeholder-service-role-key"
+          SUPABASE_DB_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: "pk_test_placeholder"
+          PAYSTACK_SECRET_KEY: "sk_test_placeholder"
+          PAYSTACK_WEBHOOK_SECRET: "ci-placeholder-webhook-secret"
+          PAYSTACK_MIN_KOBO: "5000"
+          R2_ACCOUNT_ID: "00000000000000000000000000000000"
+          R2_ACCESS_KEY_ID: "ci-placeholder-access-key-id"
+          R2_SECRET_ACCESS_KEY: "ci-placeholder-secret-access-key"
+          R2_S3_ENDPOINT: "https://00000000000000000000000000000000.r2.cloudflarestorage.com"
+          R2_BUCKET_PUBLIC_MEDIA: "ci-placeholder-public-media"
+          R2_BUCKET_PRIVATE_FILES: "ci-placeholder-private-files"
+          R2_PUBLIC_MEDIA_BASE_URL: "https://media.example.invalid"
+          RESEND_API_KEY: "re_ci_placeholder"
+          EMAIL_FROM: "CI Build <no-reply@example.invalid>"
+          UPSTASH_REDIS_REST_URL: "https://placeholder.upstash.io"
+          UPSTASH_REDIS_REST_TOKEN: "ci-placeholder-upstash-token"
+          SENTRY_DSN: "https://ci-placeholder@o0.ingest.sentry.io/0"
+
+      # The last gate, and the only one that inspects build OUTPUT rather than
+      # source. Next.js inlines exactly the NEXT_PUBLIC_* variables into client
+      # chunks and nothing else — that is a build-time guarantee, not a
+      # convention, and it holds for variables that are merely *named* here.
+      # What it does not hold against is a `NEXT_PUBLIC_` prefix appearing on a
+      # server secret, which would convert a server-only value into a
+      # permanently public one with no error anywhere. This step is the control
+      # for that failure.
+      #
+      # It searches .next/static only: those are the chunks the browser
+      # downloads. A match in .next/server would merely mean the server code
+      # knows its own variable name, which is correct behaviour.
+      #
+      # Written for POSIX grep, not GNU grep. `grep --include` is a GNU extension, and
+      # on a grep without it the command exits non-zero with a usage error —
+      # which, inside an `if`, reads as "nothing matched". A security gate
+      # written that way passes unconditionally on BusyBox or BSD grep. `-r`,
+      # `-q` and `-E` are POSIX, so this behaves identically on the Ubuntu
+      # runner, on macOS and on BusyBox.
+      #
+      # The scope is all of .next/static rather than only '*.js' files. Every
+      # byte of that directory is downloaded by a browser, so a match anywhere in
+      # it is a real finding, and scanning more broadly fails safe rather than
+      # safe.
+      #
+      # No `|| true` and no `pipefail` anywhere in this step: the verdict is the
+      # explicit `exit 1` in the branch below, and a pipeline would risk SIGPIPE
+      # turning a real match back into a pass.
+      - name: Guard — no server-only secret name in the client bundle
+        run: |
+          set -eu
+          pattern='SUPABASE_SERVICE_ROLE_KEY|PAYSTACK_SECRET_KEY|PAYSTACK_WEBHOOK_SECRET|R2_SECRET_ACCESS_KEY|UPSTASH_REDIS_REST_TOKEN|RESEND_API_KEY'
+
+          if [ ! -d .next/static ]; then
+            echo "::error::.next/static is missing — the build produced no client bundle, so this guard cannot run."
+            exit 1
+          fi
+
+          # Inside an `if` condition, errexit does not apply and a non-zero
+          # status means "no match", which is the pass case.
+          if grep -rqE "$pattern" .next/static; then
+            echo "::error::A server-only secret name reached the client bundle. Next.js only inlines NEXT_PUBLIC_* into client chunks, so this means a server secret has been given a NEXT_PUBLIC_ prefix, or a server module has been imported into a client component."
+            grep -rlE "$pattern" .next/static
+            exit 1
+          fi
+
+          echo "No server-only secret names found in .next/static. OK"

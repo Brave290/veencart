@@ -16,6 +16,11 @@ next-env.d.ts
 .env.*
 !.env.example
 
+# Vercel CLI writes env.local, and it does NOT match the .env* pattern above.
+# Without this, a single `git add .` publishes real secrets. Found by the
+# devops audit — a gap, not a stylistic preference.
+env.local
+
 # Test + tooling artefacts
 coverage/
 playwright-report/

@@ -207,10 +207,25 @@ describe("driver scoping", () => {
       db,
       `insert into public.shipment_events
          (shipment_id, sequence_no, event_type, previous_status, new_status, actor_user_id, actor_role, public_message, is_customer_visible)
-       values ($1, 99, 'status_change', 'confirmed', 'picked_up', $2, 'driver', 'Picked up', true)`,
+       values ($1, 99, 'status_change', 'confirmed', 'picked_up', $2, 'driver', 'Picked up', false)`,
       [SHIPMENT_FOR_DRIVER1, IDS.driver]
     );
     expect(ok).toBe(false); // rejection === false means it was ALLOWED
+  });
+
+  it("a driver CANNOT publish a customer-visible event", async () => {
+    // Hardened after the security audit. `is_customer_visible` now defaults to
+    // false and the driver policy pins it to false, so the lowest-trust writer
+    // in the system cannot push text onto a customer's timeline.
+    await db.__as!("authenticated", IDS.driver);
+    const ok = await rejects(
+      db,
+      `insert into public.shipment_events
+         (shipment_id, sequence_no, event_type, previous_status, new_status, actor_user_id, actor_role, public_message, is_customer_visible)
+       values ($1, 103, 'status_change', 'confirmed', 'picked_up', $2, 'driver', 'Picked up', true)`,
+      [SHIPMENT_FOR_DRIVER1, IDS.driver]
+    );
+    expect(ok).toBe(true);
   });
 
   it("a driver CANNOT record a money-touching event type", async () => {

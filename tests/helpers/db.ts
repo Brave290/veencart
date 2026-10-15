@@ -5,7 +5,7 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { splitStatements } from "../../scripts/sql.mjs";
+import { splitStatements } from "../../src/lib/sql";
 
 // tests/helpers/db.ts -> tests/helpers -> tests -> <project root>
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");

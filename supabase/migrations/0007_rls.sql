@@ -395,6 +395,23 @@ create policy shipment_events_driver_insert on public.shipment_events
     public.is_driver()
     and public.is_assigned_driver(shipment_id)
     and public.is_driver_event_type(event_type::text)
+    -- ATTRIBUTION IS PINNED, NOT SUBMITTED.
+    -- A driver was able to set actor_user_id to an admin's id and actor_role to
+    -- 'admin', forging an immutable audit entry against someone else. The
+    -- timeline is append-only precisely so it cannot be rewritten later; if the
+    -- actor is client-supplied at write time, "immutable" only means "frozen
+    -- after forging". The actor must equal the caller.
+    and actor_user_id = public.current_user_id()
+    and actor_role = 'driver'
+    -- A driver writes customer-facing text, never staff notes. Pinning
+    -- internal_note to null means a note cannot be smuggled into a row that is
+    -- later flipped visible.
+    and internal_note is null
+    -- A driver cannot publish arbitrary text to customers. Any driver-authored
+    -- row must carry the standard, non-sensitive confirmation message and stay
+    -- out of the public timeline; customer-visible status rows are written by
+    -- the server path, which uses the service role.
+    and is_customer_visible = false
   );
 
 create policy shipment_events_ops_all on public.shipment_events
@@ -569,10 +586,20 @@ create policy payments_customer_insert on public.payments
 -- No UPDATE policy for customers on payments. Promotion to 'succeeded' is a
 -- server-side verification step; a client-writable payment status is a
 -- pay-your-own-price vulnerability.
-create policy payments_ops_update on public.payments
+-- Payment VERIFICATION is a server-side job driven by a signature-checked
+-- provider event or an outbound API call, so no browser principal needs UPDATE
+-- at all. This policy previously admitted `is_staff() or is_dispatcher()`, which
+-- let a dispatcher rewrite a settled payment's amount (350,000 -> 1, satisfying
+-- the consistency CHECK by changing both columns together) and forge
+-- status='succeeded' with an invented provider_reference.
+--
+-- Narrowed to admin. The durable backstop is the payments_freeze_amount trigger
+-- in 0006, because a policy cannot distinguish a legitimate reconciliation job
+-- from a hijacked staff session.
+create policy payments_admin_update on public.payments
   for update to authenticated
-  using (public.is_staff() or public.is_dispatcher())
-  with check (public.is_staff() or public.is_dispatcher());
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- refunds: admin-only for writes. Customers may read refunds against their own
 -- payments (a receipt page needs them), operations may read all.
@@ -601,8 +628,23 @@ create policy refunds_admin_write on public.refunds
 -- system_settings: readable by any signed-in user so the app can apply business
 -- policy client-side, but secret values are masked by the service layer, and
 -- only an admin may change them.
-create policy system_settings_read on public.system_settings
-  for select to authenticated using (true);
+-- system_settings
+--
+-- The previous policy was `for select to authenticated using (true)`, which
+-- silently ignored the `is_secret` column: any signed-in account — including
+-- the cheapest signup — could `select * from system_settings where is_secret`
+-- and read back whatever the business had marked secret. The schema created the
+-- flag and then wrote a policy that ignored it.
+--
+-- Split by row: non-secret settings are readable by any signed-in user so the
+-- app can apply business policy client-side; secret settings are admin-only.
+create policy system_settings_read_nonsecret on public.system_settings
+  for select to authenticated
+  using (not is_secret);
+
+create policy system_settings_admin_read on public.system_settings
+  for select to authenticated
+  using (public.is_admin());
 
 create policy system_settings_admin_write on public.system_settings
   for all to authenticated

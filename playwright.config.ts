@@ -45,29 +45,35 @@ export default defineConfig({
   ],
 
   webServer: {
-    // The shim below exists ONLY because this build sandbox blocks the
+    // The shim exists ONLY because this build sandbox blocks the
     // uv_interface_addresses syscall that `next start` calls on startup. See
-    // scripts/sandbox-network-shim.cjs. It is inert unless the opt-in env var
-    // is set, and is never referenced by `npm start`, `npm run dev` or
-    // `npm run build` — on a normal host none of this is needed.
+    // scripts/sandbox-network-shim.cjs.
+    //
+    // OPT-IN, NOT OPT-OUT. The default is "0" (shim off). The earlier version
+    // defaulted to "1", which meant any environment that merely failed to set
+    // the variable — CI included — silently got the sandbox shim. A
+    // sandbox-only workaround must never be the default anywhere else.
+    //
+    // CI sets VEENCART_ALLOW_NETWORK_SHIM=0 explicitly so nobody "cleans up"
+    // that line later and reintroduces the bug.
     command:
-      process.env.VEENCART_ALLOW_NETWORK_SHIM === "1"
+      process.env.VEENCART_ALLOW_NETWORK_SHIM === '1'
         ? `npx next start --port ${PORT} --hostname 127.0.0.1`
         : `npx next start --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    stdout: "pipe",
-    stderr: "pipe",
+    stdout: 'pipe',
+    stderr: 'pipe',
     env: {
       ...process.env,
-      VEENCART_ALLOW_NETWORK_SHIM: process.env.VEENCART_ALLOW_NETWORK_SHIM ?? "1",
-      NODE_OPTIONS: [
-        "--require ./scripts/sandbox-network-shim.cjs",
-        process.env.NODE_OPTIONS ?? "",
-      ]
-        .filter(Boolean)
-        .join(" "),
+      VEENCART_ALLOW_NETWORK_SHIM: process.env.VEENCART_ALLOW_NETWORK_SHIM ?? '0',
+      NODE_OPTIONS:
+        process.env.VEENCART_ALLOW_NETWORK_SHIM === '1'
+          ? ['--require ./scripts/sandbox-network-shim.cjs', process.env.NODE_OPTIONS ?? '']
+              .filter(Boolean)
+              .join(' ')
+          : (process.env.NODE_OPTIONS ?? ''),
     },
   },
 });

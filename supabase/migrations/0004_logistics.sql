@@ -468,7 +468,15 @@ create table if not exists public.shipment_events (
   location_name     text,
   public_message    text,
   internal_note     text,
-  is_customer_visible boolean not null default true,
+  -- DEFAULT FALSE, NOT TRUE.
+  --
+  -- This was `default true`, and that is a privacy bug with a nasty shape: the
+  -- lowest-trust writer in the system (a driver) could post an event containing
+  -- an internal note and leave this flag unset, and the customer-facing timeline
+  -- query — which filters on this column — would then publish it. Publishing to
+  -- a customer must be an explicit, deliberate act. Omitting the flag now means
+  -- "staff only", which is the direction that fails safely.
+  is_customer_visible boolean not null default false,
   supersedes_event_id uuid references public.shipment_events (id) on delete set null,
   metadata          jsonb not null default '{}'::jsonb,
   created_at        timestamptz not null default now(),

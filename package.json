@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "db:verify": "node scripts/verify-migrations.mjs",
+    "db:verify": "vitest run tests/migrations.test.ts",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check": "npm run typecheck && npm run lint && npm run check:contrast && npm run db:verify && npm run test"
   },
