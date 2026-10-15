@@ -2,7 +2,9 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { PublicHeader } from '@/components/brand/public-header';
+import { SiteFooter } from '@/components/brand/site-footer';
 
 /**
  * Route-level error boundary.
@@ -37,41 +39,48 @@ export default function RouteError({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col justify-center px-5 py-16">
-      <p className="text-sm font-semibold tracking-tight text-danger-text">Something went wrong</p>
+    <div className="min-h-dvh bg-canvas">
+      <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
+        <PublicHeader />
+        <main id="main" className="mx-auto flex w-full max-w-2xl flex-col py-16 sm:py-24">
+          <p className="inline-flex w-fit items-center gap-2 rounded-full border border-danger-text/25 bg-danger-subtle px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-danger-text">
+            Something went wrong
+          </p>
 
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance">
-        We could not load this page
-      </h1>
+          <h1 className="mt-6 text-4xl font-extrabold leading-[1.04] tracking-[-0.05em] text-content sm:text-5xl">
+            We could not load this page.
+          </h1>
 
-      <p className="mt-4 text-base leading-relaxed text-content-muted">
-        This is a problem on our side, not something you did. Nothing you have
-        booked or paid is affected by it.
-      </p>
+          <p className="mt-5 text-base leading-7 text-content-muted sm:text-lg">
+            This is a problem on our side, not something you did. Nothing you have booked or paid is affected by it.
+          </p>
 
-      {error.digest ? (
-        <p className="mt-4 text-sm text-content-muted">
-          If you need to report this, quote reference{' '}
-          <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">
-            {error.digest}
-          </code>
-        </p>
-      ) : null}
+          {error.digest ? (
+            <p className="mt-5 text-sm text-content-muted">
+              If you need to report this, quote reference{' '}
+              <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">{error.digest}</code>
+            </p>
+          ) : null}
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Button onClick={reset}>Try again</Button>
-        <Link href="/">
-          <Button variant="outline">Back to home</Button>
-        </Link>
+          <div className="mt-9 flex flex-wrap gap-3">
+            <button type="button" onClick={reset} className={buttonVariants({ size: 'lg' })}>
+              Try again
+            </button>
+            <Link href="/" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+              Back to home
+            </Link>
+          </div>
+
+          <p className="mt-10 text-sm text-content-muted">
+            If this keeps happening, visit{' '}
+            <Link href="/contact" className="font-medium text-primary underline-offset-4 hover:underline">
+              contact
+            </Link>{' '}
+            and include the reference above.
+          </p>
+        </main>
+        <SiteFooter />
       </div>
-
-      <p className="mt-10 text-sm text-content-muted">
-        If this keeps happening, use{' '}
-        <Link href="/contact" className="text-primary underline-offset-4 hover:underline">
-          contact
-        </Link>{' '}
-        and include the reference above.
-      </p>
-    </main>
+    </div>
   );
 }
