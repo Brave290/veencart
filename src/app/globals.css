@@ -1,0 +1,633 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   VEENCART LOGISTICS — DESIGN TOKENS
+   Nigeria-first logistics + commerce platform.
+
+   Art direction
+   -------------
+   Teal is the operational brand: it appears on chrome, primary actions, live
+   tracking and anything the platform *does*. Orange is the commercial accent:
+   quotes, pricing, calls to action that move money or start a quote. The two
+   never share a component — a teal button and an orange button on the same
+   screen is a bug, not a feature.
+
+   Neutrals are WARM (oklch hue ~86, very low chroma). Cool blue-grey reads as
+   generic SaaS and fights the teal; a warm stone reads as paper, cardboard and
+   Lagos dust, and it keeps the shadows from going blue-black.
+
+   HOW TO USE
+   ----------
+   Components may ONLY use semantic tokens (surface, content, line, primary,
+   accent, danger, status-*, ...). Raw ramp steps (teal-600, orange-400) exist
+   for building semantic tokens and for one-off data-viz needs. Do not reach
+   past the semantic layer in a component.
+
+   The Tailwind default palette is intentionally NOT cleared. Other agents are
+   writing components in parallel and a missing colour fails silently and
+   invisibly, which is far more expensive to debug than an off-brand one. The
+   rule above, not a wiped namespace, is the guard rail.
+
+   All colour values are oklch(). They were authored in OKLCH, converted to
+   sRGB, and gamut-mapped (chroma reduced, lightness and hue held) before use.
+   Measured WCAG 2.1 contrast ratios are recorded inline next to every pair
+   that matters. Re-verify with a contrast tool before changing a value.
+   ========================================================================== */
+
+@theme {
+  /* -----------------------------------------------------------------------
+     COLOUR — TEAL (primary / brand / operational)
+     OKLCH hue 184. Steps 600+ are the only ones safe for body text on white:
+     teal-600 = 5.21:1, teal-700 = 7.60:1, teal-800 = 10.89:1.
+     Steps 400/500 are for fills and borders only, never for text on white.
+     ----------------------------------------------------------------------- */
+  --color-teal-50: oklch(0.977 0.014 184);
+  --color-teal-100: oklch(0.94 0.033 184);
+  --color-teal-200: oklch(0.88 0.065 184);
+  --color-teal-300: oklch(0.8 0.09 184);
+  --color-teal-400: oklch(0.706 0.099 184);
+  --color-teal-500: oklch(0.612 0.098 184);
+  --color-teal-600: oklch(0.522 0.088 184);
+  --color-teal-700: oklch(0.436 0.074 184);
+  --color-teal-800: oklch(0.352 0.06 184);
+  --color-teal-900: oklch(0.272 0.045 184);
+  --color-teal-950: oklch(0.196 0.032 184);
+
+  /* -----------------------------------------------------------------------
+     COLOUR — ORANGE (accent / commercial)
+     Orange is the cheapest hue to get wrong: orange-500 and orange-600 are
+     beautiful and UNREADABLE as a background under white text.
+     Measured: white on orange-600 = 4.33:1 (FAIL, AA needs 4.5).
+             white on orange-700 = 6.03:1 (PASS) <- lowest safe accent button
+     Rule: never orange-600 or lighter as a background behind white text.
+     Orange is also never body text on white — orange-500 is 2.1:1.
+     ----------------------------------------------------------------------- */
+  --color-orange-50: oklch(0.977 0.019 58);
+  --color-orange-100: oklch(0.941 0.046 58);
+  --color-orange-200: oklch(0.888 0.085 58);
+  --color-orange-300: oklch(0.82 0.122 58);
+  --color-orange-400: oklch(0.745 0.152 58);
+  --color-orange-500: oklch(0.668 0.168 58);
+  --color-orange-600: oklch(0.588 0.172 58);
+  --color-orange-700: oklch(0.508 0.16 58);
+  --color-orange-800: oklch(0.432 0.14 58);
+  --color-orange-900: oklch(0.36 0.114 58);
+  --color-orange-950: oklch(0.268 0.078 58);
+
+  /* -----------------------------------------------------------------------
+     COLOUR — NEUTRAL (warm stone, oklch hue ~86)
+     Neutral-500 (#787670, 4.54:1 on white) is the lightest step allowed as
+     muted TEXT. Neutral-400 is 2.55:1 and must never carry text.
+     ----------------------------------------------------------------------- */
+  --color-neutral-50: oklch(0.986 0.002 86);
+  --color-neutral-100: oklch(0.968 0.003 86);
+  --color-neutral-200: oklch(0.924 0.005 86);
+  --color-neutral-300: oklch(0.872 0.006 86);
+  --color-neutral-400: oklch(0.712 0.008 86);
+  --color-neutral-500: oklch(0.566 0.009 86);
+  --color-neutral-600: oklch(0.452 0.009 86);
+  --color-neutral-700: oklch(0.372 0.009 86);
+  --color-neutral-800: oklch(0.282 0.008 86);
+  --color-neutral-900: oklch(0.208 0.007 86);
+  --color-neutral-950: oklch(0.148 0.006 86);
+
+  /* -----------------------------------------------------------------------
+     COLOUR — SEMANTIC RAMPS
+     success / warning / danger / info exist so no component ever has to pick a
+     raw hue for a meaning. warning sits at hue 75-85 (amber) and is
+     deliberately pushed away from the neutral hue 86 family.
+     ----------------------------------------------------------------------- */
+  --color-success-50: oklch(0.975 0.022 152);
+  --color-success-100: oklch(0.94 0.058 152);
+  --color-success-200: oklch(0.88 0.104 152);
+  --color-success-300: oklch(0.8 0.132 152);
+  --color-success-400: oklch(0.706 0.142 152);
+  --color-success-500: oklch(0.612 0.138 152);
+  --color-success-600: oklch(0.522 0.12 152);
+  --color-success-700: oklch(0.436 0.1 152);
+  --color-success-800: oklch(0.352 0.079 152);
+  --color-success-900: oklch(0.272 0.058 152);
+  --color-success-950: oklch(0.196 0.04 152);
+
+  --color-warning-50: oklch(0.984 0.024 80);
+  --color-warning-100: oklch(0.958 0.058 80);
+  --color-warning-200: oklch(0.906 0.11 80);
+  --color-warning-300: oklch(0.836 0.146 78);
+  --color-warning-400: oklch(0.756 0.164 72);
+  --color-warning-500: oklch(0.668 0.168 60);
+  --color-warning-600: oklch(0.566 0.15 52);
+  --color-warning-700: oklch(0.462 0.12 46);
+  --color-warning-800: oklch(0.372 0.09 41);
+  --color-warning-900: oklch(0.282 0.062 41);
+  --color-warning-950: oklch(0.208 0.042 41);
+
+  --color-danger-50: oklch(0.971 0.012 24);
+  --color-danger-100: oklch(0.936 0.03 24);
+  --color-danger-200: oklch(0.885 0.058 24);
+  --color-danger-300: oklch(0.808 0.104 24);
+  --color-danger-400: oklch(0.706 0.16 24);
+  --color-danger-500: oklch(0.612 0.202 24);
+  --color-danger-600: oklch(0.522 0.216 24);
+  --color-danger-700: oklch(0.436 0.198 24);
+  --color-danger-800: oklch(0.352 0.164 24);
+  --color-danger-900: oklch(0.272 0.124 24);
+  --color-danger-950: oklch(0.196 0.084 24);
+
+  --color-info-50: oklch(0.971 0.013 254);
+  --color-info-100: oklch(0.936 0.03 254);
+  --color-info-200: oklch(0.885 0.056 254);
+  --color-info-300: oklch(0.808 0.096 254);
+  --color-info-400: oklch(0.712 0.14 254);
+  --color-info-500: oklch(0.618 0.17 254);
+  --color-info-600: oklch(0.526 0.186 254);
+  --color-info-700: oklch(0.44 0.176 254);
+  --color-info-800: oklch(0.36 0.148 254);
+  --color-info-900: oklch(0.288 0.114 254);
+  --color-info-950: oklch(0.212 0.078 254);
+
+  /* -----------------------------------------------------------------------
+     VEENCART BRAND IDENTITY LAYER (from UI-DESIGN.md / UI-SYSTEM.md)
+     -----------------------------------------------------------------------
+     These are the BRAND hexes supplied in the design brief. They are recorded
+     here as the authoritative identity values, and they are deliberately NOT
+     wired to action colours. Reason, measured with scripts/check-contrast.mjs:
+
+       #FFFFFF on #F4773B  -> 2.78:1   FAILS 4.5:1 (orange button, white label)
+       #F4773B on #FFFFFF  -> 2.78:1   FAILS 4.5:1 (orange as text)
+       #202927 on #F4773B  -> 5.36:1   PASSES (ink on orange fill)
+       #66736F on #F1F4F1  -> 4.46:1   FAILS 4.5:1
+       #B8C3BD on #FFFFFF  -> 1.81:1   FAILS 3:1   (control edge)
+
+     So #F4773B is a BRAND colour, not a button colour. The actionable tokens
+     below (--color-accent, --color-content-muted, --color-line-strong) are
+     already the corrected, measured equivalents and are what components must
+     use. Use the brand layer for large decorative fields, the logo lockup and
+     marketing surfaces where no body text sits on top.
+
+     RECONCILIATION OUTSTANDING: no Veencart logo asset exists in this repo, so
+     "the logo is the source of truth" cannot be completed here. Until the
+     client supplies the asset these hexes stand as the provisional identity and
+     must be re-verified against the real logo before release.
+     ----------------------------------------------------------------------- */
+  --color-brand-900: #0b4f4a; /* deep teal   9.41:1 on white */
+  --color-brand-700: #087e67; /* primary teal 5.01:1 on white */
+  --color-brand-100: #dcefe8; /* pale mint */
+  --color-brand-orange: #f4773b; /* ink text only, never white */
+  --color-brand-orange-ink: #202927; /* the ONLY text permitted on brand orange */
+  --color-brand-orange-700: #b2551f; /* orange fill that DOES take white text, 4.99:1 */
+  --color-brand-orange-100: #fff0e5; /* pale orange */
+  --color-brand-canvas: #f7f8f5; /* warm white page background */
+  --color-brand-ink: #202927; /* ink */
+  --color-brand-muted: #5f6c68; /* corrected secondary text, 5.48:1 on white */
+  --color-brand-border: #e5e9e5; /* hairline, decorative */
+  --color-brand-border-strong: #808b87; /* corrected control edge, 3.52:1 */
+
+  /* -----------------------------------------------------------------------
+     SEMANTIC SURFACE / CONTENT LAYER
+     This is the layer components are allowed to use. Remap these for dark
+     mode later without touching a single component.
+     ----------------------------------------------------------------------- */
+  --color-canvas: oklch(0.986 0.002 86); /* page background — warm off-white */
+  --color-surface: oklch(1 0 0); /* cards, panels, sheets */
+  --color-surface-muted: oklch(0.968 0.003 86); /* table headers, inset wells */
+  --color-surface-sunken: oklch(0.986 0.002 86); /* page-level inset regions */
+
+  --color-content: oklch(0.208 0.007 86); /* primary text — 14.50:1 on canvas */
+  --color-content-muted: oklch(0.452 0.009 86); /* secondary text — 7.38:1 */
+  --color-content-subtle: oklch(0.535 0.009 86); /* tertiary/meta text — 4.95:1 on canvas */
+  --color-content-inverted: oklch(1 0 0); /* text on dark surfaces */
+  --color-content-disabled: oklch(0.566 0.009 86); /* WCAG 1.4.3 exempts disabled */
+
+  /* Borders. `line` is for dividers (no contrast duty). `line-strong` is for
+     form-control boundaries, which DO carry a 3:1 duty under WCAG 1.4.11:
+     measured neutral-400 on canvas = 2.55:1 (FAIL), neutral-500 = 4.54:1 (PASS).
+     Form controls use line-strong. Decorative dividers use line. */
+  --color-line: oklch(0.872 0.006 86);
+  --color-line-strong: oklch(0.566 0.009 86);
+  --color-line-subtle: oklch(0.924 0.005 86);
+
+  /* Action colours */
+  --color-primary: oklch(0.436 0.074 184); /* teal-700, white text = 7.60:1 */
+  --color-primary-hover: oklch(0.352 0.06 184); /* teal-800, 10.89:1 */
+  --color-primary-active: oklch(0.272 0.045 184); /* teal-900, 14.71:1 */
+  --color-primary-subtle: oklch(0.94 0.033 184); /* teal-100 — tinted button */
+  --color-primary-subtle-hover: oklch(0.88 0.065 184);
+  --color-primary-fg: oklch(1 0 0);
+  --color-primary-ring: oklch(0.522 0.088 184); /* teal-600, for rings on teal-100 */
+
+  --color-accent: oklch(0.508 0.16 58); /* orange-700, white text = 6.03:1 */
+  --color-accent-hover: oklch(0.432 0.14 58); /* orange-800, 8.32:1 */
+  --color-accent-active: oklch(0.36 0.114 58);
+  --color-accent-subtle: oklch(0.941 0.046 58);
+  --color-accent-subtle-hover: oklch(0.888 0.085 58);
+  --color-accent-fg: oklch(1 0 0);
+
+  --color-danger-strong: oklch(0.436 0.198 24); /* danger-700, white = 8.65:1 */
+  --color-danger-strong-hover: oklch(0.352 0.164 24);
+  --color-danger-fg: oklch(1 0 0); /* text/icon ON danger-strong — 8.65:1 */
+  --color-danger-subtle: oklch(0.936 0.03 24);
+  --color-danger-subtle-hover: oklch(0.885 0.058 24);
+  --color-danger-text: oklch(0.436 0.198 24); /* danger text/icon on a light tint — 8.65:1 */
+
+  --color-success-text: oklch(0.352 0.079 152); /* success-800 */
+  --color-success-surface: oklch(0.94 0.058 152);
+  --color-success-border: oklch(0.436 0.1 152);
+  --color-success-fg: oklch(1 0 0); /* on success-700 — 7.53:1 */
+
+  --color-warning-text: oklch(0.372 0.09 41); /* warning-800 */
+  --color-warning-surface: oklch(0.958 0.058 80);
+  --color-warning-border: oklch(0.462 0.12 46);
+  --color-warning-fg: oklch(1 0 0); /* on warning-700 #8d3e10 — 5.92:1 */
+
+  --color-info-text: oklch(0.36 0.148 254);
+  --color-info-surface: oklch(0.936 0.03 254);
+  --color-info-border: oklch(0.44 0.176 254);
+  --color-info-fg: oklch(1 0 0); /* on info-700 — 7.84:1 */
+
+  /* Focus. teal-600 gives 5.21:1 on canvas and 4.75:1 on surface-muted —
+     both far above the 3:1 non-text minimum, so the ring is visible on every
+     surface in the system including inside tinted cards. */
+  --color-focus: oklch(0.522 0.088 184);
+  --color-focus-offset: oklch(1 0 0);
+
+  /* -----------------------------------------------------------------------
+     STATUS RAMP — 16 SHIPMENT STATUSES, 6 FAMILIES
+
+     Sixteen distinct hues would be unreadable and half of them would fail
+     contrast. Instead the 16 statuses collapse into 6 semantic families that
+     are separated by hue AND lightness AND a mandatory icon. Colour is never
+     the only channel (WCAG 1.4.1) — StatusBadge always renders an icon or
+     dot plus the human-readable label.
+
+     Each family = surface (tint) + text (dark, AA) + edge (ring).
+     MEASURED contrast of text-on-surface (WCAG AA needs 4.5:1 for text):
+
+       family    surface     text        ratio     verdict
+       ------------------------------------------------------------------
+       neutral   #f5f4f2     #42403b      9.43:1  PASS
+       info      #ddebfe     #00519d      6.51:1  PASS
+       brand     #d4f3ed     #05453f      9.25:1  PASS
+       success   #cff7d8     #124625      9.27:1  PASS
+       warning   #ffeed9     #784f00      6.35:1  PASS
+       danger    #fee3e0     #740010      9.82:1  PASS
+
+     Family mapping (16 shipment statuses):
+       neutral : requested, awaiting_quote
+       info    : quoted, quote_accepted, confirmed, pickup_scheduled
+       brand   : picked_up, in_transit, out_for_delivery   <- the parcel moves
+       success : delivered
+       warning : awaiting_payment, on_hold, delivery_failed
+       danger  : cancelled, exception, returned_to_sender
+
+     NOTE: `warning` (#784f00) sits only 11deg from the neutral hue family.
+     They are kept apart by three other channels: the icon glyph, the surface
+     tint (neutral #f5f4f2 vs warning #ffeed9 — warm grey vs amber), and the
+     ring. Do not collapse the badge to surface+text alone.
+     ----------------------------------------------------------------------- */
+  --color-status-neutral-surface: oklch(0.968 0.003 86);
+  --color-status-neutral-text: oklch(0.372 0.009 86);
+  --color-status-neutral-edge: oklch(0.872 0.006 86);
+
+  --color-status-info-surface: oklch(0.936 0.03 254);
+  --color-status-info-text: oklch(0.44 0.176 254);
+  --color-status-info-edge: oklch(0.618 0.17 254);
+
+  --color-status-brand-surface: oklch(0.94 0.033 184);
+  --color-status-brand-text: oklch(0.352 0.06 184);
+  --color-status-brand-edge: oklch(0.522 0.088 184);
+
+  --color-status-success-surface: oklch(0.94 0.058 152);
+  --color-status-success-text: oklch(0.352 0.079 152);
+  --color-status-success-edge: oklch(0.436 0.1 152);
+
+  --color-status-warning-surface: oklch(0.958 0.058 80);
+  --color-status-warning-text: oklch(0.372 0.09 41);
+  --color-status-warning-edge: oklch(0.756 0.164 72);
+
+  --color-status-danger-surface: oklch(0.936 0.03 24);
+  --color-status-danger-text: oklch(0.352 0.164 24);
+  --color-status-danger-edge: oklch(0.612 0.202 24);
+
+  /* -----------------------------------------------------------------------
+     TYPOGRAPHY
+     Plus Jakarta Sans for display — geometric, wide apertures, holds up at
+     large sizes and reads as confident commerce rather than enterprise bland.
+     Inter for UI/body — the densest, most legible text face for operational
+     screens full of tables, forms and numbers.
+     JetBrains Mono for waybills, tracking IDs, amounts and reference codes.
+     A logistics platform's whole job is reading long alphanumeric strings
+     correctly; a proportional face makes VC-8471-XXXX ambiguous.
+
+     next/font: the layout agent should wire
+       const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+       const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta' })
+       const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' })
+     and put the .variable classes on <html>. Until then the stacks below fall
+     through to the system UI font, which is why every family ends in a real
+     generic fallback rather than nothing.
+     ----------------------------------------------------------------------- */
+  --font-sans: var(--font-inter, 'Inter'), ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: var(--font-jakarta, 'Plus Jakarta Sans'), var(--font-inter, 'Inter'),
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-mono: var(--font-jetbrains, 'JetBrains Mono'), ui-monospace, SFMono-Regular, Menlo,
+    Consolas, 'Liberation Mono', monospace;
+
+  /* Type scale — 1.250 major third, 16px base.
+     Line heights are set per step, not globally: display text needs ~1.1 to not
+     look loose, body text needs 1.5, dense UI (xs/sm) needs ~1.4 so table rows
+     stay tight without clipping descenders. */
+  --text-2xs: 0.6875rem; /* 11px — table micro-labels, legal. Never body copy. */
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem; /* 12px — badges, table meta */
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem; /* 14px — secondary UI, table cells */
+  --text-sm--line-height: 1.3125rem;
+  --text-base: 1rem; /* 16px — body, form inputs. Never go below 16px on mobile: */
+  --text-base--line-height: 1.5rem; /* iOS zooms the viewport on focus below that. */
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6875rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.8125rem;
+  --text-2xl: 1.5625rem; /* 25px */
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.9531rem; /* 31px */
+  --text-3xl--line-height: 2.375rem;
+
+  /* Fluid display sizes. clamp() with a viewport term and a hard ceiling —
+     headings grow on a 1280 desktop and stop, they never balloon on a 4K. */
+  --text-display-sm: clamp(1.5rem, 1.32rem + 0.9vw, 2rem);
+  --text-display-sm--line-height: 1.2;
+  --text-display-md: clamp(1.875rem, 1.55rem + 1.6vw, 2.75rem);
+  --text-display-md--line-height: 1.15;
+  --text-display-lg: clamp(2.25rem, 1.6rem + 3.1vw, 4rem);
+  --text-display-lg--line-height: 1.08;
+
+  --tracking-tighter: -0.02em; /* display sizes only — over-tight at body size */
+  --tracking-tight: -0.011em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.02em;
+  --tracking-widest: 0.08em; /* uppercase eyebrow labels */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* -----------------------------------------------------------------------
+     SPACING — 4px base. Tailwind v4 resolves every `p-*`, `gap-*`, `w-*`
+     numerically off this one value, so the whole system scales together.
+     ----------------------------------------------------------------------- */
+  --spacing: 0.25rem;
+
+  /* -----------------------------------------------------------------------
+     RADIUS — three steps, plus a shape.
+     sm  6px  controls, inputs, badges
+     md  8px  cards, panels, table wrappers
+     lg  12px modals and bottom sheets only
+     pill     avatars, status dots, count bubbles
+     A logistics product should feel built, not bubbly. Nothing else gets a
+     radius in this system.
+     ----------------------------------------------------------------------- */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 9999px;
+
+  /* -----------------------------------------------------------------------
+     ELEVATION
+     Shadows are tinted to the neutral hue (86) at very low alpha so they read
+     as depth on warm paper rather than blue-black smudges. One shadow per
+     elevation level — do not stack them.
+     ----------------------------------------------------------------------- */
+  --shadow-none: 0 0 0 rgb(0 0 0 / 0);
+  --shadow-xs: 0 1px 2px 0 oklch(0.282 0.008 86 / 0.06);
+  --shadow-sm: 0 1px 3px 0 oklch(0.282 0.008 86 / 0.08), 0 1px 2px -1px oklch(0.282 0.008 86 / 0.06);
+  --shadow-md: 0 4px 8px -2px oklch(0.282 0.008 86 / 0.1), 0 2px 4px -2px oklch(0.282 0.008 86 / 0.06);
+  --shadow-lg: 0 12px 20px -4px oklch(0.282 0.008 86 / 0.12), 0 4px 8px -4px oklch(0.282 0.008 86 / 0.06);
+  --shadow-dialog: 0 24px 48px -12px oklch(0.148 0.006 86 / 0.24);
+
+  /* -----------------------------------------------------------------------
+     MOTION
+     Three durations, three curves, one rule: transform and opacity only.
+     Never animate width/height/top/left — they force layout and drop frames
+     on the low-end Android devices most of this audience actually uses.
+
+     ease-out  entrances — fast out of the gate, settles. 200ms
+     ease-in   exits — accelerate away, do not linger. 120ms
+     ease-in-out  moves that start AND end on screen. 200ms
+     ----------------------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --duration-instant: 100ms;
+  --duration-fast: 140ms; /* hover, press, colour change */
+  --duration-base: 200ms; /* dialog in, tab panel change, accordion */
+  --duration-slow: 320ms; /* page/sheet transitions, rare */
+
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-out) both;
+  --animate-fade-in-up: fade-in-up var(--duration-base) var(--ease-out) both;
+  --animate-fade-out: fade-out var(--duration-fast) var(--ease-in) both;
+  --animate-overlay-in: overlay-in var(--duration-base) var(--ease-out) both;
+  --animate-overlay-out: overlay-out var(--duration-fast) var(--ease-in) both;
+  --animate-skeleton-pulse: skeleton-pulse 1.6s var(--ease-in-out) infinite;
+  --animate-spin-slow: spin 0.8s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  /* 8px rise — small enough to read as "arriving", not as a slide-in gimmick */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes overlay-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  /* Opacity only. The usual skeleton "shimmer" moves a background-position
+     gradient across the box, which repaints every frame; on a 3G connection
+     with four skeletons on screen that is a visible jank. Opacity is free. */
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* -----------------------------------------------------------------------
+     BREAKPOINTS
+     Base styles are the 320px case — there is no 320 variant, 320 IS the
+     default. xs is the first step up and exists for the 375/390 phones that
+     dominate the market. Verified at 320 / 375 / 768 / 1024 / 1280.
+     ----------------------------------------------------------------------- */
+  --breakpoint-xs: 30rem; /* 480px */
+  --breakpoint-sm: 40rem; /* 640px */
+  --breakpoint-md: 48rem; /* 768px */
+  --breakpoint-lg: 64rem; /* 1024px */
+  --breakpoint-xl: 80rem; /* 1280px */
+  --breakpoint-2xl: 96rem; /* 1536px */
+
+  /* -----------------------------------------------------------------------
+     LAYOUT CONSTRAINTS
+     1280px content ceiling: wider and line lengths exceed ~75ch, which is
+     past comfortable reading and measurably hurts form completion.
+     ----------------------------------------------------------------------- */
+  --container-content: 80rem; /* 1280px */
+  --container-reading: 42rem; /* 672px ≈ 68ch — long-form / terms */
+  --container-form: 28rem; /* 448px — single-column forms */
+}
+
+/* ==========================================================================
+   BASE LAYER
+   ========================================================================== */
+@layer base {
+  /* Font smoothing. Without this, macOS renders our warm neutral at a lighter
+     apparent weight than Windows and Linux do, and the UI looks inconsistent
+     across the two platforms most of our users are on. */
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-content);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    /* Never `overflow-x: hidden` on body. It hides broken layout instead of
+       fixing it, and it breaks position: sticky in some browsers. If something
+       overflows at 320px, the component is wrong — fix the component. */
+  }
+
+  /* One focus rule for the whole system.
+     This is deliberately global rather than a per-component `focus-visible:`
+     utility. A single rule means a newly added control cannot forget its focus
+     state, and there is no chance of a ring on top of a ring. 2px solid at 2px
+     offset clears surfaces, cards and tinted panels alike (teal-600 measures
+     5.21:1 on canvas, 4.75:1 on surface-muted). */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Remove the ring only where the element is genuinely not focusable-by-tab
+     and a custom indicator already exists. Nothing currently qualifies. */
+
+  ::selection {
+    background-color: var(--color-teal-200);
+    color: var(--color-teal-950);
+  }
+
+  /* Number inputs: the spinners are useless for a phone number and they eat
+     horizontal space at 320px. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* Reduced motion.
+     Not "disable the animations" — collapse them to a single frame. Anything
+     that depended on an `animationend` event still fires, so a dialog or toast
+     that waits on it will not hang forever. This is why the override is
+     0.01ms and not `none`. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Windows High Contrast / forced-colors: let the OS palette through, and
+     keep our focus ring visible by using the system highlight colour. */
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline: 2px solid Highlight;
+    }
+  }
+}
+
+/* ==========================================================================
+   UTILITY LAYER — the two exceptions that genuinely cannot live in a
+   component className because they need to compose with arbitrary values.
+   ========================================================================== */
+@layer utilities {
+  /* Horizontal scroll containers (wide data tables) need a scrollbar that is
+     discoverable on desktop without stealing vertical space on mobile. */
+  .scroll-shadow-x {
+    background-image: linear-gradient(to right, var(--color-surface), transparent),
+      linear-gradient(to left, var(--color-surface), transparent),
+      linear-gradient(to right, oklch(0.282 0.008 86 / 0.12), transparent),
+      linear-gradient(to left, oklch(0.282 0.008 86 / 0.12), transparent);
+    background-position:
+      left center,
+      right center,
+      left center,
+      right center;
+    background-repeat: no-repeat;
+    background-size:
+      24px 100%,
+      24px 100%,
+      12px 100%,
+      12px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+
+  /* Tabular figures for money, tracking columns and any column of numbers.
+     Without this, digits jitter column-to-column as values change. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

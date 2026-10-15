@@ -1,0 +1,257 @@
+/* ============================================================================
+   VEENCART MOTION SYSTEM
+   ----------------------------------------------------------------------------
+   Motion tokens, easing curves, choreography primitives and the
+   reduced-motion contract. Sources: Material 3 duration/easing guidance,
+   Fluent 2 choreography, WCAG 2.1 SC 2.3.3 (Animation from Interactions).
+
+   THE ONE RULE
+   ────────────
+   Motion must COMMUNICATE something a static design cannot: cause and effect,
+   spatial relationship, state change, or hierarchy. If you cannot name what
+   an animation tells the user, delete it. "It looks nice" is not a reason —
+   it is latency with a frame budget.
+
+   DURATION BANDS (consensus of Material 3, Apple HIG and current practice)
+   ──────────────────────────────────────────────────────────────────────────
+     instant    0ms     no transition (state already correct)
+     fast      120ms    hover, focus, press, colour change
+     base      200ms    dropdown, tooltip, badge, inline reveal
+     moderate  280ms    dialog, drawer, accordion, page section
+     slow      400ms    full-surface transition — ceiling, not a default
+
+   Under 200ms reads as instant, which is the goal for feedback. Over 300ms
+   reads as sluggish on a mid-range Android phone — a real constraint here,
+   since Veencart's drivers use low-cost devices on mobile data.
+
+   EASING — DIRECTION IS THE MEANING
+   ────────────────────────────────
+     --ease-enter    elements ARRIVING. Fast start, decelerating settle.
+                     Objects in the physical world arrive and stop.
+     --ease-exit     elements LEAVING. Accelerating away. The user already
+                     decided; do not make them wait for a slow start.
+     --ease-move     an element that STAYS and changes between two states.
+                     Symmetric: accelerate then decelerate.
+     --ease-linear   indeterminate progress only (spinners, loading sweeps).
+
+   NEVER `ease-in` for interaction feedback. A control that eases in on press
+   feels broken — the user already pressed it.
+
+   EXIT DURATION = 75% OF ENTRANCE
+   The single rule that matters most. If a dialog enters at 280ms it should
+   leave at ~200ms. Waiting for an exit animation is dead time the user can
+   feel, and users leave things they no longer want.
+
+   ONLY transform AND opacity
+   ─────────────────────────
+   These two are the only properties the compositor can animate off the main
+   thread. Animating width, height, top, left, margin or padding forces layout
+   recalculation on every frame and drops frames on exactly the low-end
+   devices this product targets. A cubic-bezier curve does not change this —
+   it changes the timing, not the cost.
+
+   NEVER `transition: all`
+   ──────────────────────
+   It animates properties you did not intend, including ones added later by
+   another developer. Name the properties.
+
+   THE REDUCED-MOTION CONTRACT
+   ───────────────────────────
+   `prefers-reduced-motion` is a WCAG requirement, not a courtesy. But simply
+   setting duration to 0 is NOT sufficient and is the most common way this is
+   got wrong: an element sitting at `opacity: 0` waiting for a transition that
+   never runs is INVISIBLE CONTENT. The user gets a blank section.
+
+   The correct pattern, implemented in globals.css and used by <Reveal>:
+     1. The still state is the DEFAULT and is what the server renders.
+     2. Motion is added only under `@media (prefers-reduced-motion: no-preference)`.
+     3. JS adds `.js-reveal-armed`; only THEN is the hidden start state applied.
+     4. No JS, or reduced motion, or JS error => content is simply visible.
+
+   Result: reduced-motion users get the identical story with no movement, and
+   a JavaScript failure can never hide a page section.
+
+   EXCEPTIONS — things that keep moving under reduced motion
+   ───────────────────────────────────────────────────────────
+     * Indeterminate loading indicators. A frozen spinner reads as "broken",
+       not "calm". Reduced motion removes gratuitous movement, not signal.
+     * Focus-ring transitions. A keyboard user needs to SEE the state change.
+   ========================================================================= */
+
+/* -----------------------------------------------------------------------
+   MOTION TOKENS (exposed to Tailwind via @theme)
+   Naming is by INTENT, not by value: `duration-base` tells you when to use
+   it, `duration-200` only tells you what it is.
+   ----------------------------------------------------------------------- */
+@theme {
+  --duration-instant: 0ms;
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-moderate: 280ms;
+  --duration-slow: 400ms;
+
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-move: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-linear: linear;
+
+  /* Choreography offsets. A 30–50ms gap between container and content reads
+     as weight — the panel moves, its contents catch up. */
+  --stagger-child: 50ms;
+  --stagger-children: 6;
+  --reveal-distance: 12px;
+}
+
+/* -----------------------------------------------------------------------
+   REDUCED MOTION — global safety net
+   Puts every transition on a hair rather than removing it, so state changes
+   still complete. `!important` is correct here: this must win over component
+   transitions, including ones added later.
+   ----------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Loading indicators keep signalling. A stopped spinner is a broken-looking
+     UI, not an accessible one. */
+  [data-motion-essential] {
+    animation-duration: 1.2s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+/* -----------------------------------------------------------------------
+   SCROLL REVEAL
+   Three gates before an element is ever hidden:
+     1. the user has NOT asked for reduced motion, AND
+     2. JS is present (it added .js-reveal-armed), AND
+     3. the element carries .reveal
+   Miss any one and the content renders visible. Fail-safe by construction.
+   ----------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .js-reveal-armed.reveal:not(.is-revealed) {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-distance), 0);
+  }
+}
+
+.reveal {
+  transition:
+    opacity var(--duration-moderate) var(--ease-enter),
+    transform var(--duration-moderate) var(--ease-enter);
+  will-change: opacity, transform;
+}
+
+.reveal.is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  /* Release the compositor hint once the animation is done — `will-change`
+     left on permanently holds a GPU layer and costs memory. */
+  will-change: auto;
+}
+
+/* Sibling stagger, driven by a CSS custom property set per child.
+   The first child is never delayed: delay reads as sloppiness on the item
+   the user is already looking at. */
+@media (prefers-reduced-motion: no-preference) {
+  .js-reveal-armed.stagger > *:not(.is-revealed) {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-distance), 0);
+  }
+
+  .js-reveal-armed.stagger > * {
+    transition:
+      opacity var(--duration-moderate) var(--ease-enter),
+      transform var(--duration-moderate) var(--ease-enter);
+    transition-delay: calc(var(--stagger-index, 0) * var(--stagger-child));
+  }
+}
+
+/* -----------------------------------------------------------------------
+   INTERACTION PRIMITIVES
+   ----------------------------------------------------------------------- */
+
+/* Press feedback. Squash is the ONE place the Disney principle transfers: a
+   control that visibly depresses reads as a physical object being pushed.
+   Kept tiny (0.97) — anything larger on a button looks like a bug. */
+.press {
+  transition:
+    transform var(--duration-fast) var(--ease-enter),
+    background-color var(--duration-fast) var(--ease-enter),
+    border-color var(--duration-fast) var(--ease-enter),
+    box-shadow var(--duration-fast) var(--ease-enter);
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Hover lift for cards. 2–4px: beyond 4px the card appears to float away
+   from the page rather than being reachable. */
+.lift {
+  transition:
+    transform var(--duration-base) var(--ease-enter),
+    box-shadow var(--duration-base) var(--ease-enter),
+    border-color var(--duration-base) var(--ease-enter);
+}
+@media (hover: hover) {
+  .lift:hover {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+/* Indeterminate progress sweep. Linear, because the duration is unknown —
+   easing a progress indicator that has no end is meaningless. */
+@keyframes veencart-sweep {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+.sweep {
+  animation: veencart-sweep 1.4s var(--ease-linear) infinite;
+}
+
+/* Delivery-status pulse. Used for "in transit" only — a moving status the
+   user can see is information, not decoration. */
+@keyframes veencart-pulse-ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid currentColor;
+  animation: veencart-pulse-ring 2s var(--ease-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Stop the ring expanding; keep a static outline so the state is still
+     legible without movement. */
+  .pulse-ring::before {
+    animation: none;
+    opacity: 0.5;
+    transform: none;
+  }
+}
