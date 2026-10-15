@@ -14,7 +14,7 @@ export function PagePreloader() {
     const finish = () => {
       if (finished) return;
       finished = true;
-      const remaining = Math.max(0, 260 - (window.performance.now() - started));
+      const remaining = Math.max(0, 1050 - (window.performance.now() - started));
       window.setTimeout(() => {
         setVisible(false);
         window.setTimeout(() => setMounted(false), 220);
@@ -22,7 +22,7 @@ export function PagePreloader() {
     };
     if (document.readyState === 'complete') finish();
     else window.addEventListener('load', finish, { once: true });
-    const fallback = window.setTimeout(finish, 1800);
+    const fallback = window.setTimeout(finish, 3200);
     return () => {
       window.removeEventListener('load', finish);
       window.clearTimeout(fallback);
