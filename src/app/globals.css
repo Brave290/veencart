@@ -635,4 +635,36 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Keep below-the-fold work cheap on low-end phones without hiding content. */
+  .content-section {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 720px;
+  }
 }
+
+/* Theme overrides stay at the semantic layer so pages do not need duplicate
+   dark-mode markup. Marketing hero surfaces intentionally remain brand-dark. */
+html[data-theme='dark'] {
+  --color-canvas: oklch(0.19 0.018 184);
+  --color-surface: oklch(0.235 0.021 184);
+  --color-surface-muted: oklch(0.275 0.024 184);
+  --color-surface-sunken: oklch(0.16 0.016 184);
+  --color-content: oklch(0.965 0.012 86);
+  --color-content-muted: oklch(0.79 0.018 86);
+  --color-content-subtle: oklch(0.68 0.015 86);
+  --color-content-disabled: oklch(0.55 0.012 86);
+  --color-line: oklch(0.36 0.025 184);
+  --color-line-subtle: oklch(0.3 0.022 184);
+  --color-line-strong: oklch(0.55 0.035 184);
+  --color-primary-subtle: oklch(0.29 0.055 184);
+  --color-accent-subtle: oklch(0.3 0.065 58);
+  color-scheme: dark;
+}
+
+html[data-theme='dark'] body { background-color: var(--color-canvas); color: var(--color-content); }
+html[data-theme='dark'] .bg-white\/70,
+html[data-theme='dark'] .bg-white\/80,
+html[data-theme='dark'] .bg-white\/85,
+html[data-theme='dark'] .bg-white\/90 { background-color: color-mix(in srgb, var(--color-surface) 92%, transparent); }
+html[data-theme='dark'] .text-content\/80 { color: color-mix(in srgb, var(--color-content) 80%, transparent); }

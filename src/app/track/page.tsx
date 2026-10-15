@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { TrackLookup } from './track-lookup';
+import { PublicHeader } from '@/components/brand/public-header';
+import { SiteFooter } from '@/components/brand/site-footer';
 
 export const metadata: Metadata = {
   title: 'Track a shipment',
@@ -17,8 +19,12 @@ export const metadata: Metadata = {
  */
 export default function TrackPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-5 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight text-balance">Track a shipment</h1>
+    <main className="min-h-dvh bg-canvas">
+      <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
+        <PublicHeader />
+        <section className="mx-auto max-w-3xl py-12 sm:py-20">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Shipment visibility</p>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance sm:text-5xl">Track a shipment</h1>
 
       <p className="mt-4 max-w-2xl text-base leading-relaxed text-content-muted">
         Enter the tracking reference from your booking confirmation. It looks
@@ -30,6 +36,9 @@ export default function TrackPage() {
       </p>
 
       <TrackLookup />
+        </section>
+        <SiteFooter />
+      </div>
     </main>
   );
 }

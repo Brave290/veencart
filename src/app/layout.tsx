@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './motion.css';
 import { PagePreloader } from '@/components/motion/page-preloader';
+import { ThemeProvider } from '@/components/theme-provider';
 
 /**
  * Arms the motion system, and only when the user has not asked for reduced
@@ -22,7 +23,7 @@ import { PagePreloader } from '@/components/motion/page-preloader';
  * every visitor sees all the content. Motion degrades to stills — content
  * never degrades to blank.
  */
-const ARM_MOTION = `try{if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('js-reveal-armed')}}catch(e){}`;
+const ARM_MOTION = `try{var t=localStorage.getItem('veencart-theme');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.dataset.theme='dark'}if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('js-reveal-armed')}}catch(e){}`;
 
 /**
  * Business contact details are deliberately NOT hard-coded here.
@@ -58,7 +59,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: ARM_MOTION }} />
       </head>
-      <body className="min-h-dvh bg-canvas font-light text-content antialiased"><PagePreloader />{children}</body>
+      <body className="min-h-dvh bg-canvas font-light text-content antialiased"><ThemeProvider><PagePreloader />{children}</ThemeProvider></body>
     </html>
   );
 }
