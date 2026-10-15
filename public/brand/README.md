@@ -4,5 +4,6 @@ The logo is a cart mark with a check gesture: a simple symbol for commerce, move
 
 - `veencart-logo.svg` — horizontal lockup for light surfaces.
 - `veencart-mark.svg` — square mark for app icons, avatars and favicons.
+- `veencart-logo-motion.mp4` — centered horizontal splash animation; mark and wordmark stay on one lane throughout. 1920×1080, 30fps, 4.53s, silent.
 - Core palette: deep teal `#0B4F4A`, primary teal `#087E67`, cart orange `#F4773B`, ink `#202927`, warm white `#F7F8F5`.
 - Use the orange only as a brand accent or with ink text; use `#B2551F` when white text is required.
