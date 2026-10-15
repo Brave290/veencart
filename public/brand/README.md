@@ -9,9 +9,11 @@ This identity is based on the supplied Veencart Logistics reference mark. The pr
 
 ## Files
 
-- `veencart-logo.svg` — horizontal lockup for websites, documents and presentations.
+- `veencart-logo-original.png` — exact supplied master artwork, preserved unchanged.
+- `veencart-logo-original-transparent.png` — exact supplied master artwork with only the outside canvas removed for UI and motion compositing.
+- `veencart-logo.svg` — clean vector lockup for websites, documents and presentations.
 - `veencart-mark.svg` — circular badge for app icons, avatars, favicons and social profiles.
-- `veencart-logo-motion.mp4` — centered horizontal logistics splash animation; badge and wordmark stay on one lane throughout. 1920×1080, 30fps, 4.53s, silent.
+- `veencart-logo-motion.mp4` — centered exact-logo logistics splash animation; the ring, speed-V, wordmark and delivery truck reveal as the supplied artwork, then settle to the untouched logo. 1920×1080, 30fps, 4.53s, silent.
 
 ## Core palette
 

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
 
@@ -8,37 +9,31 @@ type VeencartLogoProps = {
   label?: string;
 };
 
-function LogisticsBadge({ className }: { className: string }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 64 64" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="30" fill="white" stroke="#0A8F8E" strokeWidth="1.7" />
-      <path d="M13.7 11.7A30 30 0 0 1 32 2c4.8 0 9.4 1.1 13.4 3.1" stroke="#0A8F8E" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M50.4 13.4A30 30 0 0 1 62 32c0 4.9-1.2 9.5-3.2 13.6" stroke="#F47A28" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M49.9 50.3A30 30 0 0 1 32 62c-4.7 0-9.2-1.1-13.1-3" stroke="#F47A28" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M13.4 50.6A30 30 0 0 1 2 32c0-5.1 1.3-9.9 3.5-14.1" stroke="#0A8F8E" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M15 22.3h11.5l5.1 6.8-4.8 2.7-5.1-4.5H15l5.9 3.1-6.8-.5 7.1 2.7-7-.2 8 2.6-7.6.5 10.8 1.7 6.5 5.2-4.1-8.9-13.8-9.2Z" fill="#069392" />
-      <path d="M30.2 41.9 39.7 20l5.5-3.3-3.5 8.3 7.5-4.6-13.8 19.6 1.9-8.3-7.1 10.2Z" fill="#F47A28" />
-      <path d="M29.1 39.7h10.5l-1 2.8h-8.1l-1.4-2.8Z" fill="#0A8F8E" opacity=".9" />
-      <path d="M24.6 46.2h14.8v4.1H24.6z" fill="#069392" />
-      <path d="M22 46.2h4.5v4.1H22zM39.4 46.2h4.4v4.1h-4.4z" fill="#069392" />
-      <path d="M20.2 48h24.8" stroke="white" strokeWidth=".9" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function VeencartLogo({ href, compact = false, className, label = 'Veencart home' }: VeencartLogoProps) {
+/**
+ * Uses the supplied production logo artwork as the source of truth. The
+ * transparent version removes only the outside canvas, preserving the badge,
+ * wing/V, wordmark, logistics label and delivery truck exactly.
+ */
+export function VeencartLogo({ href, compact = false, className, label = 'Veencart Logistics home' }: VeencartLogoProps) {
   const logo = (
     <span className={cn('inline-flex items-center gap-2.5', className)} aria-label={label}>
-      <LogisticsBadge className={compact ? 'size-10' : 'size-11'} />
+      <Image
+        src="/brand/veencart-logo-original-transparent.png"
+        alt=""
+        aria-hidden="true"
+        width={compact ? 44 : 52}
+        height={compact ? 44 : 52}
+        className={compact ? 'size-11 object-contain' : 'size-[52px] object-contain'}
+        priority={!compact}
+      />
       {!compact ? (
         <span className="flex flex-col leading-none">
-          <span className="text-[1.05rem] font-extrabold tracking-[0.02em] text-content">VEEN<span className="text-[#F47A28]">CART</span></span>
+          <span className="text-[1.02rem] font-extrabold tracking-[0.04em] text-content">VEEN<span className="text-[#F47A28]">CART</span></span>
           <span className="mt-1 text-[0.55rem] font-bold uppercase tracking-[0.28em] text-primary">Logistics</span>
         </span>
       ) : null}
     </span>
   );
+
   return href ? <Link href={href}>{logo}</Link> : logo;
 }
-
-export { LogisticsBadge };
