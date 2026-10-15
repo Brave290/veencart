@@ -34,7 +34,7 @@ import { buttonVariants } from './button';
  * holds a separate interactive control — the overlay will cover it.
  *
  * MOTION
- * `lift` (from src/app/motion.css) supplies the hover rise. It is already
+ * `lift` (from frontend/src/app/motion.css) supplies the hover rise. It is already
  * wrapped in `@media (hover: hover)`, so a tap on a phone cannot leave a card
  * stuck in its hover state — a real bug on Android Chrome.
  *

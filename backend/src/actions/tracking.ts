@@ -1,8 +1,8 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { lookupTracking } from '@/lib/tracking';
-import type { PublicTrackingResult } from '@/lib/types';
+import { lookupTracking } from '@backend/lib/tracking';
+import type { PublicTrackingResult } from '@backend/lib/types';
 
 /**
  * Server action for public tracking lookup.

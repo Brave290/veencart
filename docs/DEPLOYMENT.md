@@ -82,7 +82,7 @@ not have yet.**
 
 **BLOCKED — needs `SUPABASE_DB_URL` from step 1.**
 
-Migrations live in `supabase/migrations/`, numbered `0001`–`0007`, and are meant
+Migrations live in `backend/supabase/migrations/`, numbered `0001`–`0007`, and are meant
 to run in filename order.
 
 > These files do **not** write to the `supabase_migrations.schema_migrations`
@@ -117,7 +117,7 @@ Use this when the CLI cannot reach the project, or when you want each file
 applied with the credentials you are already using.
 
 ```bash
-for f in $(ls supabase/migrations/*.sql | sort); do
+for f in $(ls backend/supabase/migrations/*.sql | sort); do
   echo "--- applying $f ---"
   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f" || break
 done
@@ -146,7 +146,7 @@ and `relforcerowsecurity = t`.
 
 ### Seed data
 
-`supabase/seed.sql` contains fictional demo data — no real PII. **Do not load it
+`backend/supabase/seed.sql` contains fictional demo data — no real PII. **Do not load it
 into production.** It exists so the RLS tests and local development have
 something to assert against. Confirm `bookings` is empty afterwards:
 

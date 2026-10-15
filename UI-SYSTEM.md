@@ -26,8 +26,8 @@ exceptions rather than silently introducing new styles.
 
 - Next.js App Router, React, TypeScript with strict type checking.
 - Tailwind CSS v4 — there is **no** `tailwind.config.js`; all theme values live
-  in the `@theme` block in `src/app/globals.css`.
-- Shared, typed UI components in `src/components/ui/`.
+  in the `@theme` block in `frontend/src/app/globals.css`.
+- Shared, typed UI components in `frontend/src/components/ui/`.
 - Zod for form and API input validation.
 - Supabase Auth and PostgreSQL.
 - Cloudflare R2 for object storage.
@@ -237,7 +237,7 @@ Shipment: Awaiting quote · Awaiting payment · Confirmed · Unassigned · Assig
 Picked up · In transit · Out for delivery · Delivered · Delivery failed ·
 Exception · Cancelled.
 
-Implemented in `src/components/ui/status-badge.tsx` as a single typed mapping
+Implemented in `frontend/src/components/ui/status-badge.tsx` as a single typed mapping
 covering all 16 shipment statuses plus payment and product-order statuses.
 
 ### 5.7 Data table

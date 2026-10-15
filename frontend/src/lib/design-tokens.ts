@@ -1,7 +1,7 @@
 /**
  * VEENCART LOGISTICS — DESIGN TOKENS (TypeScript mirror)
  *
- * This file is a FAITHFUL MIRROR of `src/app/globals.css`. The CSS is the
+ * This file is a FAITHFUL MIRROR of `frontend/src/app/globals.css`. The CSS is the
  * source of truth; this is the typed copy for consumers that cannot read CSS:
  *
  *   - React Server Components passing a colour to an inline `style`
@@ -24,7 +24,7 @@
  * The WCAG contrast ratios measured for the semantic pairs are recorded in the
  * comments; they are NOT re-measured here, they are copied from the CSS.
  *
- * @see src/app/globals.css — the source of truth
+ * @see frontend/src/app/globals.css — the source of truth
  */
 
 /* ========================================================================== */

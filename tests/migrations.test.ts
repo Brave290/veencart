@@ -6,7 +6,7 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { splitStatements } from "../src/lib/sql";
+import { splitStatements } from "../backend/src/lib/sql";
 
 /** PGlite returns `unknown[]` rows; this narrows once instead of at every use. */
 function rows<T = Record<string, unknown>>(r: { rows: unknown[] }): T[] {
@@ -33,7 +33,7 @@ function rows<T = Record<string, unknown>>(r: { rows: unknown[] }): T[] {
  */
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const migrationsDir = join(root, "supabase", "migrations");
+const migrationsDir = join(root, "backend", "supabase", "migrations");
 
 /**
  * Applied ONCE for the whole file.

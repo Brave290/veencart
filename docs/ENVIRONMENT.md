@@ -34,7 +34,7 @@ it into a response body. CI enforces the first two cases — see the
 
 This is the Supabase **service role** key. It does not merely have high
 privileges — it **bypasses Row Level Security entirely**. Every policy in
-`supabase/migrations/0007_rls.sql`, and the 44 tests that verify those policies,
+`backend/supabase/migrations/0007_rls.sql`, and the 44 tests that verify those policies,
 protect data from a compromised or careless application. A service role key in
 the browser removes that protection completely: anyone can read every row of
 `payments`, `profiles`, `guest_access_tokens` and `audit_logs`, and write to
@@ -227,7 +227,7 @@ committed `.env`.
 
 ## Current gap: no boot-time validation
 
-There is **no `src/lib/env.ts`**. Nothing validates this set at startup today, so
+There is **no `frontend/src/lib/env.ts`**. Nothing validates this set at startup today, so
 a missing variable surfaces as a failed request at the moment that code path is
 first exercised — possibly days into production, possibly on a customer's order.
 

@@ -62,23 +62,27 @@ A **modular monolith**: one Next.js application, one relational database,
 separate integrations for payments, storage and email. No microservices.
 
 ```
-src/
-  app/            routes: public, services, error boundaries
-  components/
-    ui/           button, input, select, label, textarea, form-field, status-badge
-    motion/       reveal, stagger
-  lib/
-    cn.ts         class merging
-    motion.ts     motion tokens (TS mirror of motion.css)
-    design-tokens.ts
-    services.ts   service definitions
-supabase/
-  migrations/     0001..0007, applied in order
-  seed.sql        fictional demo data — no real PII
-  tests/
-scripts/          migration verifier, contrast gate, brand rename
-tests/            rls.test.ts, motion.test.ts, e2e/
+frontend/
+  src/
+    app/          Next.js routes, page shells and server-rendered UI
+    components/   brand, motion and reusable UI components
+    lib/          browser-safe design, motion and service definitions
+backend/
+  src/
+    actions/      server actions exposed to frontend forms
+    lib/          database adapter, SQL helpers, tracking projection and types
+  supabase/       migrations/0001..0007 and fictional seed data
+src -> frontend/src  compatibility link used by Next.js and existing tooling
+scripts/             migration verifier, contrast gate, brand rename
+tests/               rls.test.ts, motion.test.ts, e2e/
 ```
+
+The project is still one deployable Next.js modular monolith. The `frontend/`
+folder is where page and component work belongs. The `backend/` folder owns
+server actions, database access, SQL and Supabase migrations. Root files remain
+shared project configuration and command entry points. The small `src` link is
+intentional: Next.js App Router and existing tooling continue to work while the
+ownership boundary stays visible in GitHub.
 
 ### Database
 
@@ -109,7 +113,7 @@ role-based policy.
 ## Design system
 
 Brand teal and orange on warm neutrals. Tokens live in the Tailwind v4 `@theme`
-block in `src/app/globals.css`; there is no `tailwind.config.js`.
+block in `frontend/src/app/globals.css`; there is no `tailwind.config.js`.
 
 ### Contrast is a build gate
 

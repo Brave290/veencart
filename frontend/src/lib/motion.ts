@@ -1,5 +1,5 @@
 /**
- * Motion tokens — TypeScript mirror of src/app/motion.css.
+ * Motion tokens — TypeScript mirror of frontend/src/app/motion.css.
  *
  * WHY A MIRROR RATHER THAN READING THE CSS
  * Motion durations and curves are needed in three places: CSS (the stylesheet),

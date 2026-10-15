@@ -7,7 +7,7 @@ import {
   stagger,
   motionTransition,
   ANIMATABLE,
-} from "../src/lib/motion";
+} from "../frontend/src/lib/motion";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -115,7 +115,7 @@ describe("motionTransition", () => {
 
 describe("reduced-motion contract (motion.css)", () => {
   const css = readFileSync(
-    join(process.cwd(), "src", "app", "motion.css"),
+    join(process.cwd(), "frontend", "src", "app", "motion.css"),
     "utf8"
   );
 
@@ -153,7 +153,7 @@ describe("reduced-motion contract (motion.css)", () => {
 describe("the still state is the default", () => {
   it("arms motion only via a script, so no-JS leaves content visible", () => {
     const layout = readFileSync(
-      join(process.cwd(), "src", "app", "layout.tsx"),
+      join(process.cwd(), "frontend", "src", "app", "layout.tsx"),
       "utf8"
     );
     expect(layout).toContain("js-reveal-armed");

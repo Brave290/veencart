@@ -7,8 +7,8 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { splitStatements } from "@/lib/sql";
-import type { Db } from "@/lib/types";
+import { splitStatements } from "@backend/lib/sql";
+import type { Db } from "@backend/lib/types";
 
 /**
  * DATA LAYER — development/test adapter.
@@ -19,7 +19,7 @@ import type { Db } from "@/lib/types";
  *
  * PRODUCTION uses Supabase Postgres over the wire, reached with the
  * service-role key, and relies on the RLS policies defined in
- * supabase/migrations/0007_rls.sql for tenant isolation.
+ * backend/supabase/migrations/0007_rls.sql for tenant isolation.
  *
  * WHY AN ADAPTER AT ALL
  * The application talks to this narrow interface, never to PGlite directly.
@@ -40,7 +40,7 @@ import type { Db } from "@/lib/types";
  * For local development and CI that is irrelevant. For production, use Supabase.
  */
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 /** Persisted so bookings survive a dev-server restart, like a real database. */
 const DATA_DIR = process.env.PGLITE_DATA_DIR ?? join(root, ".pglite");

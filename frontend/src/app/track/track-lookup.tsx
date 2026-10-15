@@ -5,7 +5,7 @@ import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { StatusBadge, type PaymentStatus, type ShipmentStatus } from '@/components/ui/status-badge';
-import { trackShipment, type TrackActionState } from './actions';
+import { trackShipment, type TrackActionState } from '@backend/actions/tracking';
 
 /**
  * Tracking form + timeline.

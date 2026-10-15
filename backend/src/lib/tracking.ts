@@ -1,7 +1,7 @@
 import "server-only";
 
-import { getDb } from "@/lib/db";
-import type { PublicTrackingEvent, PublicTrackingResult } from "@/lib/types";
+import { getDb } from "@backend/lib/db";
+import type { PublicTrackingEvent, PublicTrackingResult } from "@backend/lib/types";
 
 /**
  * Public shipment tracking.

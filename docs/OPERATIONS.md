@@ -4,7 +4,7 @@ Day-to-day procedures for the things that actually go wrong: a booking nobody
 can move, a payment that does not line up, an email that never arrived, an
 uploaded photo nobody referenced, a parcel that could not be delivered.
 
-Every query below is written against the schema in `supabase/migrations/` and has
+Every query below is written against the schema in `backend/supabase/migrations/` and has
 been checked against the column names, enum values and constraints in those
 files. Column names are exact.
 

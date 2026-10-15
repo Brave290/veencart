@@ -5,12 +5,12 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { splitStatements } from "../../src/lib/sql";
+import { splitStatements } from "../../backend/src/lib/sql";
 
 // tests/helpers/db.ts -> tests/helpers -> tests -> <project root>
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-/** Fixed demo identities from supabase/seed.sql. */
+/** Fixed demo identities from backend/supabase/seed.sql. */
 export const IDS = {
   admin: "00000000-0000-0000-0000-000000000001",
   staff: "00000000-0000-0000-0000-000000000002",
@@ -44,14 +44,14 @@ export async function bootDatabase(): Promise<Db> {
     extensions: { pgcrypto, citext, btree_gist },
   }) as Db;
 
-  const migrations = join(root, "supabase", "migrations");
+  const migrations = join(root, "backend", "supabase", "migrations");
   for (const f of readdirSync(migrations).filter((f) => f.endsWith(".sql")).sort()) {
     for (const stmt of splitStatements(readFileSync(join(migrations, f), "utf8"))) {
       await db.query(stmt);
     }
   }
 
-  await db.exec(readFileSync(join(root, "supabase", "seed.sql"), "utf8"));
+  await db.exec(readFileSync(join(root, "backend", "supabase", "seed.sql"), "utf8"));
 
   /**
    * Assume a database role and, optionally, an authenticated identity.
