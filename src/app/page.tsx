@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, Check, Clock3, MapPin, PackageCheck, ScanLine, ShoppingBag, Sparkles, Waypoints } from 'lucide-react';
 import { PublicHeader } from '@/components/brand/public-header';
 import { SiteFooter } from '@/components/brand/site-footer';
+import { PagePreloader } from '@/components/motion/page-preloader';
 import { buttonVariants } from '@/components/ui/button';
 import { Reveal, Stagger } from '@/components/motion/reveal';
 
@@ -22,6 +23,7 @@ const services = [
 export default function HomePage() {
   return (
     <main className="overflow-hidden">
+      <PagePreloader />
       <section className="relative bg-[#071C24] pb-24 pt-5 text-white sm:pb-32">
         <div className="pointer-events-none absolute inset-0 overflow-hidden"><div className="absolute -right-24 -top-48 size-[540px] rounded-full bg-[#0A8F8E]/20 blur-3xl" /><div className="absolute -bottom-52 -left-24 size-[420px] rounded-full bg-[#F47A28]/10 blur-3xl" /><div className="absolute inset-x-0 top-[34%] h-px bg-white/[0.07]" /></div>
         <div className="relative mx-auto w-full max-w-[1200px] px-5 sm:px-8"><PublicHeader dark />

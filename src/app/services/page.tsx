@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Check, MoveRight } from 'lucide-react';
+import { ArrowRight, Check, MoveRight, Route, ShieldCheck } from 'lucide-react';
 import { PublicHeader } from '@/components/brand/public-header';
 import { SiteFooter } from '@/components/brand/site-footer';
+import { Reveal, Stagger } from '@/components/motion/reveal';
 import { SERVICES, SERVICE_SLUGS } from '@/lib/services';
 
 export const metadata: Metadata = {
@@ -12,11 +13,23 @@ export const metadata: Metadata = {
 
 export default function ServicesIndexPage() {
   return (
-    <main className="min-h-dvh bg-[#F4F7F6]">
-      <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8"><PublicHeader />
-        <section className="grid gap-10 py-16 sm:py-24 lg:grid-cols-[.85fr_1.15fr] lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">The Veencart network</p><h1 className="mt-4 max-w-xl text-4xl font-extrabold leading-[0.98] tracking-[-0.065em] text-content sm:text-5xl">Services built for movement.</h1></div><p className="max-w-lg text-base font-light leading-7 text-content-muted">From an everyday parcel to a high-volume consignment, choose a service that keeps the next handoff clear.</p></section>
-        <div className="grid gap-4 pb-24 sm:grid-cols-2 lg:grid-cols-3">{SERVICE_SLUGS.map((slug, index) => { const s = SERVICES[slug]; return <Link key={slug} href={`/services/${slug}`} className={index === 0 ? 'lift group rounded-[24px] border border-[#0A8F8E]/25 bg-[#071C24] p-6 text-white shadow-[0_18px_50px_rgb(7_28_36_/_16%)] sm:p-8 lg:col-span-2' : 'lift group rounded-[24px] border border-line bg-white/80 p-6 shadow-[0_8px_28px_rgb(7_28_36_/_5%)] backdrop-blur-sm sm:p-8'}><div className="flex items-start justify-between"><span className={index === 0 ? 'text-xs font-bold tracking-[0.2em] text-[#6ED0C7]' : 'text-xs font-bold tracking-[0.2em] text-content-subtle'}>0{index + 1}</span><span className={index === 0 ? 'grid size-10 place-items-center rounded-full bg-[#F47A28] text-[#071C24]' : 'grid size-10 place-items-center rounded-full bg-[#DDF4F0] text-primary'}><MoveRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" /></span></div><h2 className="mt-16 text-xl font-medium tracking-[-0.04em]">{s.name}</h2><p className={index === 0 ? 'mt-3 max-w-xl leading-7 text-white/65' : 'mt-3 leading-7 text-content-muted'}>{s.summary}</p><span className={index === 0 ? 'mt-8 inline-flex items-center gap-2 text-sm font-bold text-[#A9E5DF]' : 'mt-8 inline-flex items-center gap-2 text-sm font-bold text-primary'}>Explore service <ArrowRight aria-hidden="true" className="size-4" /></span></Link>; })}</div>
-        <div className="mb-16 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-line-subtle pt-6 text-sm text-content-muted"><span className="inline-flex items-center gap-2"><Check aria-hidden="true" className="size-4 text-primary" /> Coverage confirmed per route</span><span className="inline-flex items-center gap-2"><Check aria-hidden="true" className="size-4 text-primary" /> No invented prices or promises</span></div>
+    <main className="min-h-dvh bg-canvas">
+      <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
+        <PublicHeader />
+        <section className="relative overflow-hidden rounded-[30px] bg-[#071C24] px-6 py-12 text-white shadow-[0_24px_70px_rgb(7_28_36_/_16%)] sm:px-10 sm:py-16 lg:px-14">
+          <div className="pointer-events-none absolute -right-24 -top-36 size-96 rounded-full border-[42px] border-[#6ED0C7]/10" />
+          <div className="relative grid gap-10 lg:grid-cols-[1.25fr_.75fr] lg:items-end">
+            <Reveal><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A9E5DF]">The Veencart network</p><h1 className="mt-4 max-w-2xl text-4xl font-extrabold leading-[0.98] tracking-[-0.065em] sm:text-6xl">Services built for the next handoff.</h1><p className="mt-6 max-w-xl text-base leading-7 text-white/65">From an everyday parcel to a high-volume consignment, choose a service that keeps every movement clear, considered and easy to follow.</p></Reveal>
+            <Reveal className="rounded-2xl border border-white/10 bg-white/[0.06] p-5"><div className="flex items-center gap-3 text-[#A9E5DF]"><Route aria-hidden="true" className="size-5" /><span className="text-sm font-semibold">A route-first operation</span></div><p className="mt-4 text-sm leading-6 text-white/60">Coverage is confirmed per route. No invented delivery times, prices or promises.</p></Reveal>
+          </div>
+        </section>
+
+        <section aria-labelledby="service-list-heading" className="content-section py-16 sm:py-24">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Choose your movement</p><h2 id="service-list-heading" className="mt-3 text-3xl font-bold tracking-[-0.055em] text-content sm:text-4xl">One clear path for every parcel.</h2></div><p className="max-w-sm text-sm leading-6 text-content-muted">Select a service to see what is included, what to expect and where the route needs confirmation.</p></div>
+          <Stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{SERVICE_SLUGS.map((slug, index) => { const service = SERVICES[slug]; return <div key={slug} className={index === 0 ? 'sm:col-span-2' : ''}><Link href={`/services/${slug}`} className={`lift group flex h-full min-h-64 flex-col rounded-[24px] border p-6 shadow-xs transition-colors sm:p-8 ${index === 0 ? 'border-primary/30 bg-primary text-white shadow-[0_18px_50px_rgb(8_126_103_/_16%)]' : 'border-line bg-surface hover:border-primary/35'}`}><div className="flex items-start justify-between"><span className={`text-xs font-bold tracking-[0.2em] ${index === 0 ? 'text-[#A9E5DF]' : 'text-content-subtle'}`}>0{index + 1}</span><span className={`grid size-10 place-items-center rounded-full ${index === 0 ? 'bg-white/15 text-white' : 'bg-primary-subtle text-primary'}`}><MoveRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" /></span></div><div className="mt-auto"><h3 className="mt-12 text-xl font-semibold tracking-[-0.04em]">{service.name}</h3><p className={`mt-3 max-w-xl text-sm leading-6 ${index === 0 ? 'text-white/70' : 'text-content-muted'}`}>{service.summary}</p><span className={`mt-7 inline-flex items-center gap-2 text-sm font-bold ${index === 0 ? 'text-[#A9E5DF]' : 'text-primary'}`}>Explore service <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" /></span></div></Link></div>; })}</Stagger>
+        </section>
+
+        <section className="content-section mb-16 grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-line bg-surface p-6"><ShieldCheck aria-hidden="true" className="size-5 text-primary" /><h2 className="mt-5 text-lg font-semibold text-content">Clear by design</h2><p className="mt-2 text-sm leading-6 text-content-muted">Every service keeps the next status visible, from booking request to delivery evidence.</p></div><div className="rounded-2xl border border-line bg-surface-muted p-6"><Check aria-hidden="true" className="size-5 text-primary" /><h2 className="mt-5 text-lg font-semibold text-content">Honest coverage</h2><p className="mt-2 text-sm leading-6 text-content-muted">Availability and pricing are confirmed as your booking details are reviewed.</p></div></section>
         <SiteFooter />
       </div>
     </main>

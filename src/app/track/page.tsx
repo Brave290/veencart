@@ -1,44 +1,16 @@
 import type { Metadata } from 'next';
-import { TrackLookup } from './track-lookup';
+import { CheckCircle2, LockKeyhole, MapPinned } from 'lucide-react';
 import { PublicHeader } from '@/components/brand/public-header';
 import { SiteFooter } from '@/components/brand/site-footer';
+import { Reveal } from '@/components/motion/reveal';
+import { TrackLookup } from './track-lookup';
 
-export const metadata: Metadata = {
-  title: 'Track a shipment',
-  description:
-    'Follow a Veencart shipment from pickup to delivery using your tracking reference.',
-};
+export const metadata: Metadata = { title: 'Track a shipment', description: 'Follow a Veencart shipment from pickup to delivery using your tracking reference.' };
 
-/**
- * /track — public shipment tracking.
- *
- * This page is a Server Component that fetches nothing, so it renders
- * instantly on a slow connection. The lookup happens in a server action, which
- * means the browser never talks to the database and there is no second code path
- * that could bypass the public-safe projection in src/lib/tracking.ts.
- */
 export default function TrackPage() {
-  return (
-    <main className="min-h-dvh bg-canvas">
-      <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
-        <PublicHeader />
-        <section className="mx-auto max-w-3xl py-12 sm:py-20">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Shipment visibility</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance sm:text-5xl">Track a shipment</h1>
-
-      <p className="mt-4 max-w-2xl text-base leading-relaxed text-content-muted">
-        Enter the tracking reference from your booking confirmation. It looks
-        like{' '}
-        <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-sm">
-          VCTR-0001
-        </code>{' '}
-        and begins with <span className="font-mono text-sm">VCTR</span>.
-      </p>
-
-      <TrackLookup />
-        </section>
-        <SiteFooter />
-      </div>
-    </main>
-  );
+  return <main className="min-h-dvh bg-canvas"><div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8"><PublicHeader />
+    <section className="py-10 sm:py-16"><div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><Reveal><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Shipment visibility</p><h1 className="mt-3 max-w-xl text-4xl font-extrabold leading-[0.98] tracking-[-0.065em] text-content sm:text-6xl">Know where the handoff stands.</h1><p className="mt-6 max-w-lg text-base leading-7 text-content-muted">Enter the tracking reference from your booking confirmation. We show verified status and milestones without exposing private delivery details.</p></Reveal><Reveal className="rounded-[28px] border border-primary/20 bg-primary-subtle p-6 sm:p-8"><div className="flex items-center gap-3 text-primary"><MapPinned aria-hidden="true" className="size-5" /><span className="text-sm font-semibold">Public tracking</span></div><p className="mt-4 text-lg font-semibold tracking-[-0.03em] text-content">A simple way to see the next step.</p><div className="mt-7 flex items-center gap-2"><span className="size-2 rounded-full bg-primary" /><span className="h-px flex-1 bg-primary/25" /><span className="size-2 rounded-full bg-primary/40" /><span className="h-px flex-1 bg-primary/25" /><span className="size-2 rounded-full bg-primary/20" /></div></Reveal></div>
+      <section aria-labelledby="lookup-heading" className="content-section mx-auto mt-12 max-w-3xl rounded-[28px] border border-line bg-surface p-6 shadow-[0_18px_50px_rgb(32_41_39_/_7%)] sm:p-10"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Look up a shipment</p><h2 id="lookup-heading" className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-content">Enter your reference</h2><p className="mt-2 text-sm leading-6 text-content-muted">It looks like <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">VCTR-0001</code> and begins with <span className="font-mono text-xs">VCTR</span>.</p></div><LockKeyhole aria-hidden="true" className="mt-1 size-5 shrink-0 text-content-subtle" /></div><TrackLookup /></section>
+      <div className="mx-auto mt-8 grid max-w-3xl gap-3 text-sm text-content-muted sm:grid-cols-2"><div className="flex gap-3 rounded-2xl border border-line bg-surface-muted p-4"><CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" /><span>Verified milestones only. No unsupported live-GPS claims.</span></div><div className="flex gap-3 rounded-2xl border border-line bg-surface-muted p-4"><LockKeyhole aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" /><span>Private addresses and internal notes stay protected.</span></div></div>
+    </section><SiteFooter /></div></main>;
 }
