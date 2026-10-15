@@ -45,16 +45,22 @@ import { buttonVariants } from './button';
  */
 
 /**
- * POINTER HOVER, NOT STICKY HOVER
- * `[@media(hover:hover)]:` is written out on purpose. Tailwind v4's `hover:`
- * variant compiles to an unconditional `:hover` rule — it does NOT wrap it in
- * `@media (hover: hover)` — so on a phone the first tap latches the card into
- * its hover state and it stays lifted and outlined until the user taps
- * somewhere else. For a card that "looks clickable", a permanently outlined
- * card after a tap reads as selected, which is a lie. `lift` in motion.css
- * already has this guard for the transform; these two need it by hand.
+ * NOTE ON `hover:` AND TOUCH
+ * `hover:` is safe here without any extra guarding. Tailwind v4 compiles every
+ * `hover:` utility inside `@media (hover: hover)`, so a tap on a phone cannot
+ * latch a card into its hover state. That matters here more than most places:
+ * a card that stays outlined after a tap reads as SELECTED, and this card is
+ * not a selection control.
+ *
+ * CLASS STRINGS MUST BE LITERAL
+ * Every class here is written out in full rather than assembled from a
+ * constant. Tailwind finds utilities by scanning the source TEXT for complete
+ * class names, so `[@media(hover:hover)]:border-primary-ring` written as
+ * `` `${PREFIX}border-primary-ring` `` compiles to nothing at all — the
+ * utility silently does not exist and the hover state simply never appears.
+ * That failure is invisible in review, which is exactly why the strings stay
+ * literal.
  */
-const HOVER_HOVER = '[@media(hover:hover)]:';
 
 /** Static surfaces. `interactive` is deliberately absent — see above. */
 export type CardVariant = 'default' | 'outlined' | 'muted';
@@ -66,7 +72,8 @@ const VARIANT_CLASS: Record<CardSurfaceVariant, string> = {
   default: 'bg-surface border-line shadow-xs',
   outlined: 'bg-transparent border-line',
   muted: 'bg-surface-muted border-line-subtle',
-  interactive: `bg-surface border-line shadow-xs cursor-pointer ${HOVER_HOVER}border-primary-ring ${HOVER_HOVER}shadow-md focus-visible:rounded-md`,
+  interactive:
+    'bg-surface border-line shadow-xs cursor-pointer hover:border-primary-ring hover:shadow-md focus-visible:rounded-md',
 };
 
 const BASE =
@@ -215,15 +222,32 @@ export type CardButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
  *
  * `type` defaults to `"button"`, same reasoning as `Button`: a bare `<button>`
  * inside a form submits it.
+ *
+ * DISABLED IS A REAL STATE, NOT AN OPACITY TRICK
+ * The surface, the border and the cursor all change. A disabled card that only
+ * dims still lifts on hover, still takes focus and still announces as a
+ * button — three separate lies about whether it works.
  */
 export function CardButton({
   variant = 'interactive',
   type = 'button',
+  disabled = false,
   className,
   ...rest
 }: CardButtonProps) {
   return (
-    <button {...rest} type={type} className={cn(cardVariants({ variant, className }), 'lift block')} />
+    <button
+      {...rest}
+      type={type}
+      disabled={disabled}
+      aria-disabled={disabled || undefined}
+      className={cn(
+        cardVariants({ variant, className }),
+        'lift block',
+        disabled &&
+          'cursor-not-allowed opacity-55 hover:border-line hover:shadow-xs',
+      )}
+    />
   );
 }
 

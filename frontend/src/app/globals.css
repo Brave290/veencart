@@ -421,10 +421,19 @@
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
-  --duration-instant: 100ms;
-  --duration-fast: 140ms; /* hover, press, colour change */
-  --duration-base: 200ms; /* dialog in, tab panel change, accordion */
-  --duration-slow: 320ms; /* page/sheet transitions, rare */
+  /* DURATION TOKENS ARE NOT DEFINED HERE.
+     They live in motion.css, which is imported AFTER this file and is the
+     single source of truth for motion.
+
+     They were previously defined in both places with DIFFERENT VALUES —
+     --duration-fast as 140ms here and 120ms in motion.css, --duration-instant
+     as 100ms vs 0ms, --duration-slow as 320ms vs 400ms. In CSS, a later
+     @theme wins, so the effective value depended on import order in
+     layout.tsx. Reordering those two imports would silently retime every
+     transition in the product with nothing failing and nothing visible in
+     review. A token with two sources is not a token; it is a coin toss.
+     motion.css defines: instant 0ms · fast 120ms · base 200ms ·
+     moderate 280ms · slow 400ms. */
 
   --animate-fade-in: fade-in var(--duration-base) var(--ease-out) both;
   --animate-fade-in-up: fade-in-up var(--duration-base) var(--ease-out) both;

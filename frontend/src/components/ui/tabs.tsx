@@ -240,14 +240,8 @@ export function TabsTrigger({ value, className, disabled, onClick, ...rest }: Ta
         'transition-colors duration-fast ease-enter',
         isSelected
           ? 'border-primary text-content'
-          : // `[@media(hover:hover)]:` is explicit because Tailwind v4's `hover:`
-            // compiles to an unconditional rule. On a phone the first tap would
-            // latch an unselected tab into its hover colour, and it would then
-            // read as selected while `aria-selected` still says false — a tab
-            // that lies about its own state.
-            `border-transparent text-content-muted [@media(hover:hover)]:border-line [@media(hover:hover)]:text-content`,
-        disabled &&
-          'cursor-not-allowed text-content-disabled [@media(hover:hover)]:border-transparent',
+          : 'border-transparent text-content-muted hover:border-line hover:text-content',
+        disabled && 'cursor-not-allowed text-content-disabled hover:border-transparent',
         className,
       )}
     />

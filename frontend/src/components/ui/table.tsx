@@ -319,11 +319,7 @@ export function DataTable<T>({
                         className={cn(
                           '-mx-1 inline-flex min-h-11 items-center gap-1 rounded-sm px-1 md:min-h-9',
                           alignClass(column.align),
-                          // Guarded by hand: Tailwind v4's `hover:` compiles to an
-                          // unconditional rule, so on a phone the first tap would
-                          // latch a row or a column header into its hover state
-                          // and leave it looking selected. See card.tsx.
-                          '[@media(hover:hover)]:bg-surface [@media(hover:hover)]:text-primary',
+                          'hover:bg-surface hover:text-primary',
                         )}
                       >
                         {column.header}
@@ -392,7 +388,7 @@ export function DataTable<T>({
               ? rows.map((row, rowIndex) => (
                   <tr
                     key={rowKey(row, rowIndex)}
-                    className="transition-colors duration-fast ease-enter [@media(hover:hover)]:bg-surface-muted"
+                    className="transition-colors duration-fast ease-enter hover:bg-surface-muted"
                   >
                     {withRowHeader.map((column) => {
                       const content = column.cell(row, rowIndex);
@@ -583,7 +579,7 @@ export function TableHeadSort({
         href={buildSortHref(column, nextDirection(column, sort))}
         scroll={false}
         aria-label={sortLabel(label, column, sort)}
-        className="-mx-1 inline-flex min-h-11 items-center gap-1 rounded-sm px-1 [@media(hover:hover)]:bg-surface md:min-h-9"
+        className="-mx-1 inline-flex min-h-11 items-center gap-1 rounded-sm px-1 hover:bg-surface md:min-h-9"
       >
         {children}
         <Icon

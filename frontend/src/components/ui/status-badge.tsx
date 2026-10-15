@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { cn } from '@/lib/cn';
 import { tokens } from '@/lib/design-tokens';
 
+
 /**
  * StatusBadge — the one place a shipment, payment or order status becomes
  * something a human reads.
@@ -24,6 +25,7 @@ import { tokens } from '@/lib/design-tokens';
  */
 
 export type StatusFamily = keyof typeof tokens.status.families;
+
 
 export const SHIPMENT_STATUSES = [
   'requested',
@@ -177,21 +179,36 @@ const SHIPMENT_GLYPH: Record<ShipmentStatus, string> = {
   returned_to_sender: '↩',
 };
 
+/**
+ * Family → classes.
+ *
+ * THESE STRINGS MUST BE COMPLETE LITERALS IN THE SOURCE.
+ * An earlier version built them by interpolation:
+ *     `bg-[${c['status-success-surface']}] text-[${c['status-success-text']}]`
+ * That silently produced UNSTYLED BADGES. Tailwind scans source TEXT for whole
+ * class names; a class assembled at runtime never appears in the scan, so the
+ * rule is never generated. Nothing errors — the badge simply renders with no
+ * tint, which is exactly the failure this component exists to prevent.
+ * Verified by grepping the compiled CSS for the oklch values: all absent.
+ *
+ * The same hazard applies to `transition-[${x}]` and any assembled variant. If a
+ * class name is not a complete string literal somewhere in the source, it does
+ * not exist.
+ */
 function familyClasses(family: StatusFamily): string {
-  const c = tokens.status.colors;
   switch (family) {
     case 'neutral':
-      return `bg-[${c['status-neutral-surface']}] text-[${c['status-neutral-text']}] ring-[${c['status-neutral-edge']}]`;
+      return 'bg-surface-muted text-content-muted ring-line';
     case 'info':
-      return `bg-[${c['status-info-surface']}] text-[${c['status-info-text']}] ring-[${c['status-info-edge']}]`;
+      return 'bg-info-surface text-info-text ring-info-border';
     case 'brand':
-      return `bg-[${c['status-brand-surface']}] text-[${c['status-brand-text']}] ring-[${c['status-brand-edge']}]`;
+      return 'bg-primary-subtle text-primary ring-primary-ring';
     case 'success':
-      return `bg-[${c['status-success-surface']}] text-[${c['status-success-text']}] ring-[${c['status-success-edge']}]`;
+      return 'bg-success-surface text-success-text ring-success-border';
     case 'warning':
-      return `bg-[${c['status-warning-surface']}] text-[${c['status-warning-text']}] ring-[${c['status-warning-edge']}]`;
+      return 'bg-warning-surface text-warning-text ring-warning-border';
     case 'danger':
-      return `bg-[${c['status-danger-surface']}] text-[${c['status-danger-text']}] ring-[${c['status-danger-edge']}]`;
+      return 'bg-danger-subtle text-danger-text ring-danger-strong/40';
   }
 }
 
