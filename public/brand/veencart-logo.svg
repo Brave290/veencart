@@ -1,0 +1,9 @@
+<svg width="760" height="220" viewBox="0 0 760 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="200" height="200" rx="56" fill="#0B4F4A"/>
+  <path d="M48 57H66L76 126C77.6 137 87.2 145 98.4 145H151C161.5 145 170.5 137.9 172.9 127.7L181 88H80" stroke="#F4773B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M88 94H163L155 128H94L88 94Z" fill="#F4773B"/>
+  <circle cx="101" cy="169" r="12" fill="#F4773B"/><circle cx="154" cy="169" r="12" fill="#F4773B"/>
+  <path d="M105 47L117 59L136 39" stroke="#DCEFE8" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="255" y="125" fill="#202927" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="800" letter-spacing="-5">veen<tspan fill="#087E67">cart</tspan></text>
+  <text x="260" y="168" fill="#5F6C68" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="8">MOVE WITH CARE</text>
+</svg>
