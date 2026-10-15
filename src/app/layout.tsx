@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './motion.css';
+import { PagePreloader } from '@/components/motion/page-preloader';
 
 /**
  * Arms the motion system, and only when the user has not asked for reduced
@@ -57,7 +58,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: ARM_MOTION }} />
       </head>
-      <body className="min-h-dvh bg-canvas text-content antialiased">{children}</body>
+      <body className="min-h-dvh bg-canvas font-light text-content antialiased"><PagePreloader />{children}</body>
     </html>
   );
 }

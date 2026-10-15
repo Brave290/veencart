@@ -7,6 +7,7 @@ type VeencartLogoProps = {
   compact?: boolean;
   className?: string;
   label?: string;
+  inverse?: boolean;
 };
 
 /**
@@ -14,7 +15,7 @@ type VeencartLogoProps = {
  * transparent version removes only the outside canvas, preserving the badge,
  * wing/V, wordmark, logistics label and delivery truck exactly.
  */
-export function VeencartLogo({ href, compact = false, className, label = 'Veencart Logistics home' }: VeencartLogoProps) {
+export function VeencartLogo({ href, compact = false, className, label = 'Veencart Logistics home', inverse = false }: VeencartLogoProps) {
   const logo = (
     <span className={cn('inline-flex items-center gap-2.5', className)} aria-label={label}>
       <Image
@@ -28,8 +29,8 @@ export function VeencartLogo({ href, compact = false, className, label = 'Veenca
       />
       {!compact ? (
         <span className="flex flex-col leading-none">
-          <span className="text-[1.02rem] font-extrabold tracking-[0.04em] text-content">VEEN<span className="text-[#F47A28]">CART</span></span>
-          <span className="mt-1 text-[0.55rem] font-bold uppercase tracking-[0.28em] text-primary">Logistics</span>
+          <span className={`text-[1.02rem] font-semibold tracking-[0.04em] ${inverse ? 'text-white' : 'text-content'}`}>VEEN<span className="text-[#F47A28]">CART</span></span>
+          <span className={`mt-1 text-[0.55rem] font-medium uppercase tracking-[0.28em] ${inverse ? 'text-[#A9E5DF]' : 'text-primary'}`}>Logistics</span>
         </span>
       ) : null}
     </span>

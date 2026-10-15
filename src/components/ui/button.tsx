@@ -81,7 +81,7 @@ export function buttonVariants({
   return cn(
     // No `whitespace-nowrap`: at 320px a long CTA ("Start a shipping quote")
     // must wrap rather than push the page sideways. Most labels never wrap.
-    'inline-flex shrink-0 items-center justify-center rounded-sm font-semibold text-balance',
+    'inline-flex shrink-0 items-center justify-center rounded-full font-medium text-balance',
     'transition-colors duration-fast ease-out',
     'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55',
     'aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:opacity-55',

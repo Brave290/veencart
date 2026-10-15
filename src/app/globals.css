@@ -603,6 +603,11 @@
    UTILITY LAYER — the two exceptions that genuinely cannot live in a
    component className because they need to compose with arbitrary values.
    ========================================================================== */
+@keyframes preloader-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(220%); }
+}
+
 @layer utilities {
   /* Horizontal scroll containers (wide data tables) need a scrollbar that is
      discoverable on desktop without stealing vertical space on mobile. */
