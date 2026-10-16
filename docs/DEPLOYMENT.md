@@ -167,8 +167,8 @@ R2 → **Create bucket**, twice:
 
 | Bucket | Access | Contents |
 | --- | --- | --- |
-| `veecart-public-media` | Public | Catalogue and marketing images |
-| `veecart-private-files` | Private | Proof-of-delivery photos, customer documents |
+| `veencart-public-media` | Public | Catalogue and marketing images |
+| `veencart-private-files` | Private | Proof-of-delivery photos, customer documents |
 
 Two buckets, deliberately. A single bucket cannot have two different access
 policies; merging them would put delivery photos of customers' homes behind the
@@ -352,7 +352,7 @@ how customers stop hearing about their deliveries.
 
 ### Then
 
-Set `EMAIL_FROM=Veecart Logistics <no-reply@<your-domain>>` and
+Set `EMAIL_FROM=Veencart Logistics <no-reply@<your-domain>>` and
 `RESEND_API_KEY`.
 
 Verify:

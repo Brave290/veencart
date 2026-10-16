@@ -76,20 +76,37 @@ export function serverEnv(): ServerEnv {
 }
 
 /**
- * Whether every server variable is present, WITHOUT throwing.
+ * Whether every REQUIRED server variable is usable, WITHOUT throwing.
  *
  * Used by `/api/health`. A health check must ANSWER rather than crash, or the
  * thing monitoring the deployment goes down at the exact moment it does — and
  * an endpoint that dies when config is broken cannot report that config is
  * broken.
+ *
+ * WHY THIS ASKS ZOD INSTEAD OF COUNTING BLANK STRINGS
+ * The obvious implementation is "walk the schema keys, flag any that are
+ * absent" — and that is what this used to do. It silently treated EVERY key as
+ * mandatory, including ones explicitly marked `.optional()`. Nothing caught it
+ * because no variable was optional yet, so the first optional flag added to the
+ * schema would have flipped `/api/health` to unhealthy and taken the deployment
+ * out of rotation for a variable nobody needed.
+ *
+ * Deriving the answer from the parse keeps the two definitions from drifting:
+ * the schema says what is required, and this reports what the schema rejected.
  */
 export function checkServerEnv(): { ok: boolean; missing: string[] } {
-  const required = Object.keys(serverSchema.shape) as (keyof ServerEnv)[];
-  const missing = required.filter((k) => {
-    const v = process.env[k as string];
-    return !v || v.trim() === '';
-  });
-  return { ok: missing.length === 0, missing: missing as string[] };
+  const parsed = serverSchema.safeParse(pickEnv(serverSchema));
+
+  if (parsed.success) return { ok: true, missing: [] };
+
+  // `missing` is the field name the health endpoint contract uses; in practice
+  // it holds required fields that are absent OR present-but-invalid, because
+  // both need a human to fix them and neither can be served.
+  const missing = [...new Set(parsed.error.issues.map((i) => i.path.join('.')))].filter(
+    Boolean
+  );
+
+  return { ok: false, missing };
 }
 
 /**

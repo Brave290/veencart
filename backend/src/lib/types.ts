@@ -13,6 +13,15 @@ export type Db = Pick<PGlite, "query" | "exec" | "close" | "transaction">;
 export type Row = Record<string, unknown>;
 
 /**
+ * The handle passed to a transaction callback.
+ *
+ * Deliberately narrower than `Db`: inside a transaction there is no `close`,
+ * and typing it that way would let a caller shut down the connection from
+ * inside a transaction body.
+ */
+export type Transaction = Pick<PGlite, 'query' | 'exec'>;
+
+/**
  * The PUBLIC tracking projection.
  *
  * This is the single most important type in the codebase for privacy.

@@ -13,6 +13,16 @@ export default defineConfig({
       "server-only": fileURLToPath(
         new URL("./tests/stubs/server-only.ts", import.meta.url)
       ),
+
+      // `@backend/*` mirrors the tsconfig path alias.
+      //
+      // Added because `backend/src/lib/db.ts` imports `@backend/lib/sql`, and
+      // without this alias Vitest could not resolve it. That is not a
+      // convenience — it is why `getDb()` had ZERO test coverage for its entire
+      // life, which is precisely how `assertNotProduction()` stayed exported but
+      // uncalled while the deployed site quietly served demo data. A module the
+      // runner cannot import is a module nobody is testing.
+      "@backend": fileURLToPath(new URL("./backend/src", import.meta.url)),
     },
   },
   test: {

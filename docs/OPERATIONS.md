@@ -660,7 +660,7 @@ bulk on a first pass. `rclone` is available on this machine if an R2 remote has
 been configured; otherwise the Cloudflare dashboard delete button works and is
 reversible only for the first few minutes.
 
-Before deleting anything from `veecart-private-files`, re-run:
+Before deleting anything from `veencart-private-files`, re-run:
 
 ```sql
 select count(*) from public.delivery_proofs

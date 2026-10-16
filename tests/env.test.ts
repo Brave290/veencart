@@ -199,3 +199,55 @@ describe("the env module has no server-only leaks", () => {
     }
   });
 });
+
+describe("checkServerEnv — optional variables are NOT required", () => {
+  // THE BUG THIS PREVENTS
+  // `checkServerEnv` used to walk every schema key and flag any blank one. That
+  // silently treated `.optional()` variables as mandatory. No variable was
+  // optional at the time, so nothing failed — until the first optional flag
+  // (`SEED_DEMO_DATA`) was added to the schema, at which point `/api/health`
+  // would have reported the deployment UNHEALTHY and pulled it out of rotation
+  // over a variable nobody needed. A latent outage, one schema edit away.
+  //
+  // Uses the file's existing GOOD fixture and setEnv() helper rather than a
+  // second, differently-shaped copy of the same environment.
+
+  it("reports ok when only optional variables are absent", () => {
+    setEnv();
+    delete process.env.SEED_DEMO_DATA;
+    delete process.env.ALLOW_DEV_DB_IN_PRODUCTION;
+    delete process.env.PGLITE_DATA_DIR;
+    __resetEnvCacheForTests();
+
+    const result = checkServerEnv();
+    expect(
+      result.ok,
+      `optional flags wrongly reported missing: ${result.missing.join(", ")}`
+    ).toBe(true);
+    expect(result.missing).toEqual([]);
+  });
+
+  it("still reports a genuinely missing REQUIRED variable", () => {
+    // The other direction. Making the check lenient must not blind it.
+    setEnv({ PAYSTACK_SECRET_KEY: undefined });
+
+    const result = checkServerEnv();
+    expect(result.ok).toBe(false);
+    expect(result.missing).toContain("PAYSTACK_SECRET_KEY");
+  });
+
+  it("rejects an optional variable set to a wrong value", () => {
+    // `.optional()` means "may be absent", not "may be anything".
+    setEnv({ SEED_DEMO_DATA: "yes" });
+
+    const result = checkServerEnv();
+    expect(result.ok).toBe(false);
+    expect(result.missing).toContain("SEED_DEMO_DATA");
+  });
+
+  it("accepts the optional variable when set to its one legal value", () => {
+    setEnv({ SEED_DEMO_DATA: "1" });
+
+    expect(checkServerEnv().ok).toBe(true);
+  });
+});

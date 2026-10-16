@@ -155,7 +155,7 @@ enumerate a key. Do not merge them to save configuration effort.
 | Variable | Browser-safe | Purpose |
 | --- | --- | --- |
 | `RESEND_API_KEY` | **NO** | Resend API key for transactional email. |
-| `EMAIL_FROM` | **No** | From header, e.g. `Veecart Logistics <no-reply@yourdomain>`. |
+| `EMAIL_FROM` | **No** | From header, e.g. `Veencart Logistics <no-reply@yourdomain>`. |
 
 **Breaks if missing:** the notification outbox accumulates `failed` rows and
 nothing is ever delivered. Booking confirmations and delivery updates silently
@@ -191,6 +191,37 @@ Setting a DSN in a client app is normally how browser errors get reported.
 
 ---
 
+### Local development database (PGlite) — all optional
+
+The dev and test database is PGlite: real PostgreSQL 18.6 compiled to
+WebAssembly, so migrations, RLS, transactions and CHECK constraints all behave
+exactly as they will in production.
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `SEED_DEMO_DATA` | No | Set to `1` to load `backend/supabase/seed.sql`. Demo data only. |
+| `PGLITE_DATA_DIR` | No | Where the local database lives. Defaults to `backend/.pglite`. |
+| `ALLOW_DEV_DB_IN_PRODUCTION` | No | `1` allows the file-backed dev adapter under `NODE_ENV=production`. Preview deploys only. |
+
+#### Why `ALLOW_DEV_DB_IN_PRODUCTION` defaults to off
+
+The dev adapter is a file on disk. A serverless platform gives each invocation a
+fresh filesystem, so without this guard the deployed site would create a new
+database on every cold start, replay all migrations, load the demo seed, and
+throw the whole thing away when the instance was recycled.
+
+The failure was silent and had three faces at once:
+
+- the public `/track` page served two **fabricated** shipments to every visitor
+- a real booking written through `/book` disappeared on the next recycle
+- nothing was logged; the page simply rendered "successfully"
+
+`assertNotProduction()` existed in `backend/src/lib/db.ts` from the start but
+was **never called by anything**. The protection was a comment. It is now
+invoked at the top of `getDb()`, and `tests/production-db-guard.test.ts` proves
+it — including that a preview deploy must opt in deliberately, with the literal
+value `1`, because a truthiness check would let `=true` and `=` through.
+
 ## Setting them up
 
 ### Local development
@@ -225,23 +256,48 @@ committed `.env`.
 
 ---
 
-## Current gap: no boot-time validation
+## Boot-time validation — implemented, not a gap
 
-There is **no `frontend/src/lib/env.ts`**. Nothing validates this set at startup today, so
-a missing variable surfaces as a failed request at the moment that code path is
-first exercised — possibly days into production, possibly on a customer's order.
+> **This section previously said there was no validation and that a missing
+> variable would surface days into production. That was wrong.** The module
+> exists, it runs at startup, and CI treats it as fatal. The text below is kept
+> as a record of what changed and why, because a doc that describes a fixed bug
+> as an open one is worse than no doc.
 
-This is a known, open gap, recorded here rather than glossed over. What it means
-in practice:
+### What is enforced
 
-- A missing `RESEND_API_KEY` does not stop a deploy. It stops emails, quietly,
-  at a time nobody is watching.
-- A missing `PAYSTACK_SECRET_KEY` does not stop a deploy. It opens an
-  unauthenticated endpoint that can mark orders paid.
-- A missing `R2_SECRET_ACCESS_KEY` does not stop a deploy. It fails at a
-  customer's doorstep.
+| Piece | Where | Behaviour |
+| --- | --- | --- |
+| Pure schema | `backend/src/lib/env-schema.ts` | One definition of a valid environment, with no `server-only` import so `next.config.ts` can read it. |
+| Server accessors | `backend/src/lib/env.ts` | `serverEnv()` **throws**, naming the exact variable and what breaks. |
+| Client accessors | `backend/src/lib/env.ts` | `clientEnv()` — browser-safe values only. |
+| Boot check | `next.config.ts` | Runs on every `next dev` / `next build` / `next start`. |
+| Health check | `checkServerEnv()` | Answers rather than throws, so monitoring can report broken config instead of going down with it. |
 
-Until a validated config module exists, **the checklist in
-[DEPLOYMENT.md](./DEPLOYMENT.md#preflight-checklist) is the control.** Run it
-before every production deploy. Adding that module is tracked as work for the
-application layer, not for deployment.
+### Why the accessors throw but the build only warns
+
+Failing the build on a missing variable is correct in CI and hostile in local
+development, where a missing key should not stop you working on an unrelated
+page. So the behaviour is split by intent, not by accident:
+
+- **warn** by default — you see it immediately, nothing is blocked
+- **`ENV_STRICT=1` makes it fatal** — set in `.github/workflows/ci.yml`, so a
+  missing variable fails the build rather than the customer's order
+
+The three claims above each have a test in `tests/env.test.ts`. The message is
+the product: "email will not send" saves the night, "invalid environment" does
+not.
+
+### Optional variables are genuinely optional
+
+`checkServerEnv()` used to walk every schema key and flag any that was blank,
+which silently treated `.optional()` variables as mandatory. No variable was
+optional when that was written, so nothing failed — but the first optional flag
+(`SEED_DEMO_DATA`) would have made `/api/health` report the deployment
+unhealthy and pull it out of rotation over a variable nobody needed.
+
+It now derives the answer from the schema parse, so the schema stays the single
+source of truth for what is required. Covered by three tests in
+`tests/env.test.ts`, including the reverse case: an optional variable set to an
+*illegal value* is still reported, because `.optional()` means "may be absent",
+not "may be anything".

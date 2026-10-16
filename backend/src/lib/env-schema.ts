@@ -70,6 +70,33 @@ export const serverSchema = z.object({
     'Server-only. Missing means no transactional email at all.'
   ),
   EMAIL_FROM: required(3).describe('e.g. "Veencart Logistics <no-reply@veencart.com>"'),
+
+  // ── Local development database ────────────────────────────────────────────
+  // All three OPTIONAL, and all three default to the safe behaviour. They are
+  // declared here rather than read ad-hoc in db.ts so that `ENV_STRICT=1` in CI
+  // validates them too, and so they are discoverable in one place.
+  SEED_DEMO_DATA: z
+    .enum(['1'])
+    .optional()
+    .describe(
+      'Set to "1" to load backend/supabase/seed.sql into the local PGlite database. ' +
+        'Demo data ONLY. Never set this on a real deployment: the seed publishes ' +
+        'fabricated shipments to the public /track page.',
+    ),
+  ALLOW_DEV_DB_IN_PRODUCTION: z
+    .enum(['1'])
+    .optional()
+    .describe(
+      'Set to "1" ONLY on a preview deployment to allow the PGlite dev adapter under ' +
+        'NODE_ENV=production. Defaults to off, so forgetting it fails closed rather ' +
+        'than silently serving ephemeral demo data.',
+    ),
+  PGLITE_DATA_DIR: z
+    .string()
+    .trim()
+    .min(1)
+    .optional()
+    .describe('Where the local PGlite database lives. Defaults to backend/.pglite.'),
 });
 
 export type ClientEnv = z.infer<typeof clientSchema>;
