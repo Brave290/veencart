@@ -186,3 +186,43 @@ Answers change configuration, not architecture. Each is already seeded as
 6. **Stock reservation** — how long does an unpaid cart hold stock?
 7. **Contact details** — authoritative phone, email, hours (site and WhatsApp disagree).
 8. **Logo** — final brand asset so the palette can be reconciled against it.
+
+---
+
+## 2026-10-16 — Booking write path shipped; production data hole found and closed
+
+### Done
+- **Step 2 (`/book` write path)** — schema, coverage resolution, transactional
+  create, guest capability token, 23 tests. `bookings` now records which service
+  areas a route resolved to (migration `0008`).
+- **The no-invented-price rule** is implemented and mutation-tested: an
+  unconfigured route becomes `quote_requested`, never a fabricated price.
+- **Production data-loss hole closed.** `assertNotProduction()` existed but was
+  never called, so the deployed site booted a file-backed dev database on every
+  Vercel cold start and served the two seeded demo shipments to the public
+  `/track` page. Any booking written would have vanished on the next recycle.
+- 143 tests passing (was 105). Typecheck, lint, contrast and build green.
+
+### The new blocking dependency
+**There is no production Supabase adapter.** `backend/src/lib/db.ts` is
+PGlite-only, and it now refuses to run in production. That is deliberate, but it
+means every data-backed route is non-functional on the live domain until the
+adapter exists.
+
+To unblock, one of these is needed — and it needs your Supabase account, not me:
+
+1. **Provision a real Supabase project.** Apply the seven (now eight) migrations
+   via `supabase db push` or the SQL editor. Give me the project URL, anon key
+   and service-role key.
+2. **Run the app against a Supabase instance you already have.**
+
+I will not write the adapter blind against placeholder credentials and call it
+done — that is exactly the mistake that produced the silent hole just closed.
+The adapter has a narrow interface (`Db`) to satisfy, so it is a contained piece
+of work once credentials exist.
+
+### Note on the live site
+`/track` now returns a neutral error instead of demo shipments until the adapter
+lands. That is the correct trade — a visible error beats invented data — but it
+is a visible change to a live route, so say the word if you want the demo data
+back on a preview deployment only (`ALLOW_DEV_DB_IN_PRODUCTION=1`).
