@@ -154,8 +154,9 @@ export function Stagger({
     return () => observer.disconnect();
   }, []);
 
-  // Capped at `max` — past 6 the tail waits too long and reads as broken.
-  const items = children.slice(0, max);
+  // Every child renders. Only the animation delay is capped: items past `max`
+  // share the last delay instead of being dropped from the page.
+  const items = children;
 
   // Deliberately NOT React state. Toggling a class on the DOM is what the
   // browser needs anyway, it keeps this out of the render path entirely, and
@@ -163,7 +164,7 @@ export function Stagger({
   return (
     <div ref={ref} className={cn('stagger', className)}>
       {items.map((child, i) => (
-        <div key={i} style={{ '--stagger-index': i } as React.CSSProperties}>
+        <div key={i} style={{ '--stagger-index': Math.min(i, max - 1) } as React.CSSProperties}>
           {child}
         </div>
       ))}

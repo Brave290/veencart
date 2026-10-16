@@ -41,7 +41,6 @@ export const metadata: Metadata = {
   },
   description:
     'Veencart Logistics handles local and interstate delivery, and runs a marketplace for everyday essentials. Coverage is confirmed per route.',
-  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
