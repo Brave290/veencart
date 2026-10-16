@@ -1,5 +1,5 @@
 {
-  "buildCommand": "next build frontend",
+  "buildCommand": "next build frontend && rm -rf .next && cp -R frontend/.next .next",
   "installCommand": "npm ci",
   "framework": "nextjs"
 }
