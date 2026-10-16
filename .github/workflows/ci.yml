@@ -78,6 +78,24 @@ jobs:
       - name: Install dependencies from the lockfile
         run: npm ci
 
+      - name: Audit PRODUCTION dependencies
+        # Must stay at zero. This is the gate that catches a NEW advisory in a
+        # package that actually ships to users.
+        #
+        # The dev tree has one open advisory with no upstream patch:
+        # CVE-2026-93687 in `braces`, reachable only through eslint-config-next.
+        # Rationale, and the four independent checks behind accepting it, are in
+        # docs/SECURITY-NOTES.md.
+        #
+        # Do NOT run `npm audit fix --force` here. Its offered remedy is to
+        # downgrade Next.js 16 -> 14 to "fix" a lint-tooling DoS. That trades a
+        # theoretical availability issue in dev tooling for a guaranteed break
+        # of the framework the whole app runs on.
+        #
+        # The configured registry mirror does not implement the audit endpoint,
+        # hence the explicit --registry flag.
+        run: npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org
+
       - name: Typecheck
         run: npm run typecheck
 
