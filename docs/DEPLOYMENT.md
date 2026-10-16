@@ -241,7 +241,13 @@ settlement details the team does not have yet.**
 
 1. Dashboard → **Settings → API Keys & Integration**. Use `pk_test_` /
    `sk_test_`.
-2. Copy **Webhook Secret** → `PAYSTACK_WEBHOOK_SECRET`.
+2. Store the secret key as `PAYSTACK_SECRET_KEY`.
+
+> **CORRECTION (16 Oct 2026).** This section previously said "Copy **Webhook
+> Secret** → `PAYSTACK_WEBHOOK_SECRET`". **Paystack has no webhook secret.**
+> That is a Stripe concept and the field does not exist in the Paystack
+> dashboard — the instruction sent the team looking for something that is not
+> there. Corrected below and in `.env.example`.
 
 ### Webhook URL
 
@@ -251,24 +257,50 @@ Dashboard → **Settings → API Keys & Integration → Webhooks**, add:
 | --- | --- |
 | URL | `https://<your-production-domain>/api/webhooks/paystack` |
 | Events | `charge.success`, `charge.failed`, `refund.processed`, `refund.failed` |
-| Secret | the generated `PAYSTACK_WEBHOOK_SECRET` |
+
+There is **no Secret field** on this form. Verification uses your API secret
+key, which the application already has as `PAYSTACK_SECRET_KEY`.
 
 Use the **test** tab while on test keys — Paystack keeps test and live webhooks
-separate, and pointing the live webhook at a test-key application fails
-signature verification.
+separate, and a test key will not verify a live-mode event.
 
 > **This endpoint does not exist yet.** The Paystack integration is not built.
 > Setting the URL now means Paystack will begin delivering events to a 404,
-> which appears in the dashboard as a failing webhook and may put the delivery
-> on a retry schedule. Add the URL when the route is implemented, not before.
+> which appears in the dashboard as a failing webhook and will go onto a retry
+> schedule. Add the URL when the route is implemented, not before.
+
+### How the signature actually works
+
+Per Paystack's live documentation (published 28 Sep 2026) and corroborated by
+the official PHP SDK source:
+
+| Aspect | Value |
+| --- | --- |
+| Header | `x-paystack-signature` |
+| Algorithm | HMAC-SHA512, lowercase hex, 128 chars |
+| Key | your API **secret key** |
+| Hashed input | the **raw request body bytes** |
+
+Three failure modes worth knowing before you debug:
+
+1. **Re-serialising the JSON breaks verification.** Capture the raw bytes before
+   any body parser consumes the stream. Identical data hashed differently is
+   still a different digest.
+2. **Test keys do not verify live events** (and the reverse).
+3. **There is no replay protection.** The signature covers the body only — no
+   timestamp, nonce or version field. A captured (body, signature) pair stays
+   valid forever.
 
 ### The requirement that is not optional
 
-`/api/webhooks/paystack` **must** verify the HMAC-SHA512 signature using
-`PAYSTACK_WEBHOOK_SECRET` and reject unverified requests. Without it the endpoint
-is a public write API for "mark this order as paid". There is no partial-credit
-arrangement here: either the signature is checked or the endpoint must be
-disabled.
+`/api/webhooks/paystack` **must** verify that signature against
+`PAYSTACK_SECRET_KEY` and reject unverified requests. Without it the endpoint is
+a public write API for "mark this order as paid".
+
+Because Paystack documents that **resending is not idempotent** — the same
+event id really can arrive twice — and provides no replay protection, the
+unique constraint on `payment_events.provider_event_id` is the *only* replay
+defence in the system. It is a security control, not a tidy-up measure.
 
 Paystack retries failed deliveries, so the handler must be **idempotent**. The
 database already supports this correctly — `payment_events.provider_event_id` is
@@ -365,8 +397,9 @@ them to reach Serverless Functions in some configurations, so redeploy anyway.
 # Server-only secrets — stored encrypted, never rendered in the dashboard.
 vercel env add SUPABASE_SERVICE_ROLE_KEY production
 vercel env add SUPABASE_DB_URL production
+# Paystack webhook verification uses this same key — there is no separate
+# webhook secret to add.
 vercel env add PAYSTACK_SECRET_KEY production
-vercel env add PAYSTACK_WEBHOOK_SECRET production
 vercel env add R2_ACCOUNT_ID production
 vercel env add R2_ACCESS_KEY_ID production
 vercel env add R2_SECRET_ACCESS_KEY production

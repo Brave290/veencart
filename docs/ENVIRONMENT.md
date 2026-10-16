@@ -104,13 +104,13 @@ requires this as well — it says so explicitly in its flag help.
 | --- | --- | --- |
 | `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | **Yes** | Publishable key (`pk_test_` / `pk_live_`). Initialises the browser checkout. |
 | `PAYSTACK_SECRET_KEY` | **NO** | Secret key (`sk_test_` / `sk_live_`). Server-side verification and refunds. Never `NEXT_PUBLIC_`. |
-| `PAYSTACK_WEBHOOK_SECRET` | **NO** | HMAC-SHA512 signing secret from the Paystack dashboard. |
+| _(none)_ | **NO** | **Paystack has no separate webhook secret.** Verification uses `PAYSTACK_SECRET_KEY`. An earlier revision of this file listed a `PAYSTACK_WEBHOOK_SECRET` that does not exist — that is a Stripe concept. |
 | `PAYSTACK_MIN_KOBO` | **No** | Minimum charge in kobo. Paystack rejects below this; also enforced server-side. Default `5000` (₦50). |
 
 **Breaks if missing:** this is the most dangerous variable in the file, because
 of *how* it breaks.
 
-- **`PAYSTACK_WEBHOOK_SECRET` missing** does not crash the webhook. It makes
+- **`PAYSTACK_SECRET_KEY` missing or wrong-mode** does not crash the webhook. It makes
   `/api/webhooks/paystack` **unauthenticated**. Anyone who knows the URL can POST
   a fabricated `charge.success` and mark any order paid without paying. If this
   variable is absent, the endpoint must fail closed and reject every request —
@@ -236,7 +236,7 @@ in practice:
 
 - A missing `RESEND_API_KEY` does not stop a deploy. It stops emails, quietly,
   at a time nobody is watching.
-- A missing `PAYSTACK_WEBHOOK_SECRET` does not stop a deploy. It opens an
+- A missing `PAYSTACK_SECRET_KEY` does not stop a deploy. It opens an
   unauthenticated endpoint that can mark orders paid.
 - A missing `R2_SECRET_ACCESS_KEY` does not stop a deploy. It fails at a
   customer's doorstep.

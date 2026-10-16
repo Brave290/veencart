@@ -119,7 +119,9 @@ jobs:
           SUPABASE_DB_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
           NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: "pk_test_placeholder"
           PAYSTACK_SECRET_KEY: "sk_test_placeholder"
-          PAYSTACK_WEBHOOK_SECRET: "ci-placeholder-webhook-secret"
+          # No PAYSTACK_WEBHOOK_SECRET placeholder. Paystack has no separate
+          # webhook secret — inbound webhook verification is HMAC-SHA512 over
+          # the raw body, keyed with PAYSTACK_SECRET_KEY above.
           PAYSTACK_MIN_KOBO: "5000"
           R2_ACCOUNT_ID: "00000000000000000000000000000000"
           R2_ACCESS_KEY_ID: "ci-placeholder-access-key-id"
