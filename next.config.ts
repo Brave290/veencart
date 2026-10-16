@@ -1,4 +1,35 @@
 import type { NextConfig } from "next";
+import {
+  serverSchema,
+  clientSchema,
+  pickEnv,
+  explainEnvError,
+} from "./backend/src/lib/env-schema";
+
+/**
+ * Boot-time environment validation.
+ *
+ * WHY THIS RUNS HERE AND NOT IN A ROUTE HANDLER OR MIDDLEWARE
+ * A missing variable checked in a route handler is not a startup failure — it is
+ * a runtime surprise, hours later, and only on the one route that reads it.
+ * `next.config.ts` is evaluated by BOTH `next build` and `next start`, so
+ * validating here is what makes "fail loudly at boot" literally true: a bad
+ * deployment never builds, and a bad restart never serves.
+ *
+ * Concretely: without this, a missing Paystack key does not crash anything. The
+ * webhook route still answers requests — it just cannot verify any of them,
+ * which from the outside looks exactly like a healthy endpoint.
+ */
+function assertEnvironment(): void {
+  for (const schema of [clientSchema, serverSchema]) {
+    const parsed = schema.safeParse(pickEnv(schema));
+    if (!parsed.success) {
+      throw new Error(explainEnvError(parsed.error));
+    }
+  }
+}
+
+assertEnvironment();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
