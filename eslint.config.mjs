@@ -16,6 +16,7 @@ export default tseslint.config(
     ignores: [
       "node_modules/**",
       ".next/**",
+      "**/.next/**",
       "out/**",
       "coverage/**",
       "playwright-report/**",
