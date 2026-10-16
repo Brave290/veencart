@@ -112,6 +112,11 @@ jobs:
         # placeholder that escapes into a request fails loudly instead of
         # reaching somebody else's host.
         env:
+          # CI is the strict gate. Locally and on Vercel a missing variable only
+          # warns, because a build genuinely does not need secrets it does not
+          # consume — see the reasoning in next.config.ts. Here every placeholder
+          # IS defined, so this must fail loudly if one is ever dropped.
+          ENV_STRICT: "1"
           NEXT_PUBLIC_APP_URL: "http://localhost:3000"
           NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "ci-placeholder-anon-key"

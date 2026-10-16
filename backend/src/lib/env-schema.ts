@@ -94,7 +94,7 @@ export function explainEnvError(error: z.ZodError): string {
   const byVariable = new Map<string, string[]>();
 
   for (const issue of error.issues) {
-    const key = issue.path[0]?.toString() ?? '(unknown)';
+    const key = issue.path[0] === undefined ? '(unknown)' : String(issue.path[0]);
     const list = byVariable.get(key) ?? [];
     list.push(issue.message);
     byVariable.set(key, list);

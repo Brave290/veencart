@@ -141,6 +141,41 @@ describe("checkServerEnv", () => {
   });
 });
 
+describe("build-time gating is warn-by-default, strict on demand", () => {
+  // This behaviour is not theoretical. The first version threw at build time
+  // and broke the production deployment, because `next build` does not need
+  // secrets it does not consume — and nothing consumed those three variables
+  // yet. The regression test asserts the rule that replaces it.
+  it("ENV_STRICT is not set by default, so Vercel builds are not gated", async () => {
+    // The env file must never set ENV_STRICT, or every local build would be
+    // fatal. CI sets it in the workflow, where it belongs.
+    const { readFileSync } = await import('node:fs');
+    const example = readFileSync('.env.example', 'utf8');
+    expect(example).not.toMatch(/^ENV_STRICT=/m);
+  });
+
+  it('the CI workflow sets ENV_STRICT so a dropped placeholder is caught', async () => {
+    const { readFileSync } = await import('node:fs');
+    const ci = readFileSync('.github/workflows/ci.yml', 'utf8');
+    expect(ci).toContain('ENV_STRICT: "1"');
+  });
+
+  it('next.config reports rather than throws when not strict', async () => {
+    const { readFileSync } = await import('node:fs');
+    const config = readFileSync('next.config.ts', 'utf8');
+
+    // Regex, not a literal: matching exact quote style couples the test to a
+    // formatting choice, so a harmless quote flip fails the suite.
+    expect(config).toMatch(/process\.env\.ENV_STRICT\s*===\s*["']1["']/);
+    expect(config).toMatch(/console\.warn\(message\)/);
+
+    // And the runtime accessors must still throw loudly — that is where a
+    // missing variable is supposed to bite.
+    const accessors = readFileSync('backend/src/lib/env.ts', 'utf8');
+    expect(accessors).toMatch(/throw new Error\(explainEnvError\(parsed\.error\)\)/);
+  });
+});
+
 describe("the env module has no server-only leaks", () => {
   it("does not reference server secrets from a NEXT_PUBLIC_ name", async () => {
     const { readFileSync } = await import('node:fs');

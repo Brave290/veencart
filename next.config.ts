@@ -3,33 +3,70 @@ import {
   serverSchema,
   clientSchema,
   pickEnv,
-  explainEnvError,
 } from "./backend/src/lib/env-schema";
 
 /**
- * Boot-time environment validation.
+ * Environment reporting at BUILD time — a warning, not a gate.
  *
- * WHY THIS RUNS HERE AND NOT IN A ROUTE HANDLER OR MIDDLEWARE
- * A missing variable checked in a route handler is not a startup failure — it is
- * a runtime surprise, hours later, and only on the one route that reads it.
- * `next.config.ts` is evaluated by BOTH `next build` and `next start`, so
- * validating here is what makes "fail loudly at boot" literally true: a bad
- * deployment never builds, and a bad restart never serves.
+ * ── WHY THIS DOES NOT THROW ──────────────────────────────────────────────────
+ * This originally threw, and it broke the production deployment. That failure
+ * was instructive, so the reasoning is recorded:
  *
- * Concretely: without this, a missing Paystack key does not crash anything. The
- * webhook route still answers requests — it just cannot verify any of them,
- * which from the outside looks exactly like a healthy endpoint.
+ * `next build` inlines `NEXT_PUBLIC_*` into the bundle. Every other secret is
+ * read at REQUEST time, not build time. So a build genuinely does not need a
+ * Paystack key, an R2 credential or a Resend key in order to produce a correct
+ * artefact — and when no code consumes a variable yet, requiring it is pure
+ * breakage. The first version of this guard rejected a deployment of a working
+ * static site because three unused variables were unset.
+ *
+ * Failing an entire build over one missing secret is also wrong in principle:
+ * it takes down the marketing site, the tracking page and the storefront —
+ * everything that DOES work — because email is not configured yet.
+ *
+ * ── WHERE IT FAILS INSTEAD ───────────────────────────────────────────────────
+ * At runtime, on first use. `serverEnv()` / `clientEnv()` in
+ * backend/src/lib/env.ts throw with the variable named. A customer hitting the
+ * affected feature gets a loud, actionable error naming the missing variable,
+ * instead of a silent misconfiguration discovered days later.
+ *
+ * ── WHEN IT IS A GATE ────────────────────────────────────────────────────────
+ * Set `ENV_STRICT=1` and this becomes fatal at build time. That is the right
+ * setting for CI, and for the day every real credential exists. It is off by
+ * default because the client has not supplied Supabase, Paystack, R2 or email
+ * credentials yet — and a guard that blocks work on dependencies you do not have
+ * yet is not a guard, it is a wall.
  */
-function assertEnvironment(): void {
+function reportEnvironment(): void {
+  const problems: string[] = [];
+
   for (const schema of [clientSchema, serverSchema]) {
     const parsed = schema.safeParse(pickEnv(schema));
     if (!parsed.success) {
-      throw new Error(explainEnvError(parsed.error));
+      for (const issue of parsed.error.issues) {
+        // path[0] is `string | number | symbol`; String() because a symbol would
+        // throw on implicit conversion.
+        problems.push(`  ${String(issue.path[0] ?? 'unknown')}: ${issue.message}`);
+      }
     }
   }
+
+  if (problems.length === 0) return;
+
+  const message =
+    '\n  ENVIRONMENT: some variables are unset or malformed.\n' +
+    '  These are NOT required to build — they are read at request time.\n' +
+    '  Affected features will fail loudly, naming the variable, when used.\n' +
+    problems.join('\n') +
+    '\n  Set ENV_STRICT=1 to make this fatal at build time (CI does).\n';
+
+  if (process.env.ENV_STRICT === "1") {
+    throw new Error(message);
+  }
+
+  console.warn(message);
 }
 
-assertEnvironment();
+reportEnvironment();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
