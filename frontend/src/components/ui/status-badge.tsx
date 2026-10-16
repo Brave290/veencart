@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { cn } from '@/lib/cn';
-import { tokens } from '@/lib/design-tokens';
+import type { tokens } from '@/lib/design-tokens';
 
 
 /**
