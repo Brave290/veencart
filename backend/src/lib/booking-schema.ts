@@ -84,6 +84,74 @@ const state = z.enum(NIGERIAN_STATES, {
   message: 'Choose a state',
 });
 
+/* ========================================================================== */
+/* OPTIONAL FIELD COERCION — the rule a browser forces on us                    */
+/* ========================================================================== */
+
+/**
+ * An optional text field that a browser can leave BLANK.
+ *
+ * WHY THIS EXISTS, AND THE BUG IT FIXES
+ * `FormData.get('notes')` returns **`null`** when a field is left empty and the
+ * browser therefore never submitted it. It does NOT return `''` and it does NOT
+ * return `undefined`.
+ *
+ * So the obvious schema — `z.string().optional()` — rejects a customer who left
+ * a genuinely optional field alone. `.optional()` permits `undefined`, never
+ * `null`. The old workaround here was `.optional().or(z.literal(''))`, which
+ * accepts a blank string but still rejects the `null` a real browser sends.
+ *
+ * That is not theoretical: it was found by a test asserting that a well-formed
+ * submission survives the FormData round trip. Leaving the notes box empty —
+ * the normal case for almost every customer — would have failed validation with
+ * a message about a field they had deliberately left alone.
+ *
+ * `null` and `undefined` both become `''` here, and downstream code already
+ * treats `''` as "not supplied" via `|| null`.
+ */
+const blankToEmpty = (v: unknown) => (v === null || v === undefined ? '' : v);
+
+/** Optional single-line text: email, landmark, notes. */
+/**
+ * Optional email.
+ *
+ * Blank becomes `undefined`, NOT `''` — and this is the one field where the
+ * difference matters. `''` is not a valid email address, so normalising a blank
+ * input to `''` and then running `.email()` on it fails with "Enter a valid
+ * email address" on a field the customer deliberately left empty. The `.email()`
+ * check has to be skipped entirely, which only happens for `undefined`.
+ */
+const optionalEmail = z.preprocess(
+  (v) => (v === null || v === undefined || v === '' ? undefined : v),
+  email.optional()
+);
+
+const optionalText = (max: number) =>
+  z.preprocess(blankToEmpty, z.string().trim().max(max));
+
+/**
+ * Optional NUMBER field, which fails differently and more confusingly.
+ *
+ * `z.coerce.number()` applied to `null` produces `0`, not an error. With
+ * `.positive()` behind it, a customer who left the dimensions blank got
+ * "Weight must be greater than zero" pointed at a box they never filled in —
+ * on a field they had no reason to fill in, because dimensions are optional.
+ *
+ * Blank and `null` are normalised to `undefined` FIRST, so the field is
+ * genuinely absent rather than coerced into a number the customer never gave.
+ */
+const optionalPositiveNumber = (max: number) =>
+  z.preprocess(
+    (v) => (v === null || v === undefined || v === '' ? undefined : v),
+    // `.optional()` goes INSIDE, on the coerced schema.
+    //
+    // Without it, `undefined` reaches `z.coerce.number()`, which does
+    // `Number(undefined)` and yields `NaN` — so a genuinely absent field failed
+    // with "expected number, received NaN". `ZodOptional` short-circuits
+    // `undefined` before the coercion runs, which is the whole point of it.
+    z.coerce.number().positive().max(max).optional()
+  );
+
 /** Parcel weight in kilograms, as a number in the wire format. */
 const weightKg = z.coerce
   .number({ message: 'Enter a weight in kilograms' })
@@ -97,7 +165,7 @@ export const bookingInputSchema = z
     sender: z.object({
       name,
       phone,
-      email: email.optional().or(z.literal('')),
+      email: optionalEmail,
       street,
       locality,
       city,
@@ -107,9 +175,9 @@ export const bookingInputSchema = z
     recipient: z.object({
       name,
       phone,
-      email: email.optional().or(z.literal('')),
+      email: optionalEmail,
       street,
-      streetDetail: z.string().trim().max(200).optional().or(z.literal('')),
+      streetDetail: optionalText(200),
       locality,
       city,
       state,
@@ -123,9 +191,9 @@ export const bookingInputSchema = z
         .min(1, 'At least one item')
         .max(999, 'For more than 999 items please request a bulk quote'),
       weightKg,
-      lengthCm: z.coerce.number().positive().max(500).optional(),
-      widthCm: z.coerce.number().positive().max(500).optional(),
-      heightCm: z.coerce.number().positive().max(500).optional(),
+      lengthCm: optionalPositiveNumber(500),
+      widthCm: optionalPositiveNumber(500),
+      heightCm: optionalPositiveNumber(500),
       isFragile: z.coerce.boolean().default(false),
     }),
 
@@ -162,7 +230,7 @@ export const bookingInputSchema = z
         'Pickup date must be within the next 90 days'
       ),
 
-    notes: z.string().trim().max(1000).optional().or(z.literal('')),
+    notes: optionalText(1000),
 
     /** Consent is explicit and recorded. Not pre-ticked, not implied by use. */
     consentToContact: z.literal(true, {

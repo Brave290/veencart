@@ -70,6 +70,37 @@ reportEnvironment();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  /**
+   * PGlite is an EMBEDDED PostgreSQL — a 10.5MB WebAssembly binary, a 6.2MB
+   * data file and three extension tarballs, about 19MB in total.
+   *
+   * Without this entry the bundler follows it into the module graph and EMITS
+   * those files into `.next/static/media/`, which Next.js serves publicly at
+   * `/_next/static/media/...`. Verified by building both ways: 19.2MB appears in
+   * the public static directory without this setting, and does not appear with
+   * it.
+   *
+   * Nothing REFERENCES those files — no client chunk imports them, so no browser
+   * downloads or executes them, and no secret is exposed. It is 19MB of dead
+   * weight uploaded on every single deploy, plus an entire database engine
+   * sitting in a browser-reachable directory.
+   *
+   * Two fixes were tried and did NOT work, recorded so nobody repeats them:
+   *   - `import "server-only"` in db.ts — stops a client component importing it
+   *     directly, but does not stop the bundler emitting the assets.
+   *   - `await import("@backend/lib/db")` inside the server actions — Turbopack
+   *     still walks and emits the dynamic import's assets.
+   *
+   * `serverExternalPackages` is the setting that actually addresses it: the
+   * package is required from node_modules at runtime on the server and never
+   * enters the bundle graph at all.
+   *
+   * Note this is only load-bearing while the dev adapter exists. Once the
+   * Supabase adapter replaces PGlite this entry can go with it.
+   */
+  serverExternalPackages: ["@electric-sql/pglite"],
+
   // Speed: only ship the icons each page imports, serve modern image formats,
   // gzip/brotli responses and drop the framework fingerprint header.
   compress: true,

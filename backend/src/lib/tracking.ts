@@ -1,7 +1,19 @@
 import "server-only";
 
-import { getDb } from "@backend/lib/db";
 import type { PublicTrackingEvent, PublicTrackingResult } from "@backend/lib/types";
+
+/**
+ * The database engine is loaded on demand rather than at module load.
+ *
+ * See the equivalent note in `actions/booking.ts` for the full reasoning: a
+ * static import of `db.ts` makes the bundler emit ~19MB of PGlite wasm and data
+ * files into `.next/static/media/`, which Next serves publicly. Verified by
+ * building with and without the static import.
+ */
+async function loadDb() {
+  const { getDb } = await import("@backend/lib/db");
+  return getDb();
+}
 
 /**
  * Public shipment tracking.
@@ -63,7 +75,7 @@ export async function lookupTracking(rawReference: string): Promise<PublicTracki
   // was invented, which is a free enumeration oracle.
   if (!reference) return notFound();
 
-  const db = await getDb();
+  const db = await loadDb();
 
   const shipment = await db.query(
     `select s.tracking_reference,

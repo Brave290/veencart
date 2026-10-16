@@ -1,26 +1,35 @@
 import type { Metadata } from 'next';
-import { CalendarClock } from 'lucide-react';
-import { StatusPage } from '@/components/brand/status-page';
+
+import { BookingForm } from './booking-form';
 
 export const metadata: Metadata = {
   title: 'Book a delivery',
-  description: 'Booking a Veencart delivery. Online booking is being set up; available services and tracking are listed here.',
+  description:
+    'Request a parcel delivery with Veencart. Tell us the pickup and drop-off addresses, the service you need and what you are sending.',
 };
 
+/**
+ * The booking page.
+ *
+ * Deliberately a thin server component: all state lives in the form, and the
+ * submission goes through a server action. Nothing here touches the database,
+ * so the page is statically prerenderable and cannot fail at render time.
+ */
 export default function BookPage() {
   return (
-    <StatusPage
-      eyebrow="Booking"
-      title="Online booking is being set up."
-      body="We are not taking online bookings yet, so nothing is quoted or charged here. Read what each service includes first, and track any shipment you already have a reference for."
-      icon={CalendarClock}
-      points={[
-        'Read what each delivery service includes',
-        'Track a shipment with your reference',
-        'Coverage is confirmed per route before any booking is made',
-      ]}
-      primary={{ href: '/services', label: 'Explore services' }}
-      secondary={{ href: '/track', label: 'Track a shipment' }}
-    />
+    <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 md:py-16">
+      <header className="mb-10">
+        <h1 className="text-3xl font-semibold tracking-tight text-content sm:text-4xl">
+          Request a delivery
+        </h1>
+        <p className="mt-3 max-w-2xl text-base text-content-muted">
+          Tell us where the parcel is going and what is in it. We confirm the
+          price with you before anything is charged, and we arrange collection by
+          phone — you do not need an account to book.
+        </p>
+      </header>
+
+      <BookingForm />
+    </div>
   );
 }

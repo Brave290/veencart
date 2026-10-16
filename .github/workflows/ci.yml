@@ -206,3 +206,32 @@ jobs:
           fi
 
           echo "No server-only secret names found in .next/static. OK"
+          echo "No server-only secret names found in .next/static. OK"
+
+      - name: Guard — no bundled assets in the public static directory
+        run: |
+          set -eu
+
+          # PGlite is an EMBEDDED PostgreSQL: a 10.5MB wasm, a 6.2MB data file and
+          # three extension tarballs. Unless it is listed in
+          # `serverExternalPackages` in next.config.ts, the bundler emits all of
+          # it into .next/static/media/, which Next serves publicly.
+          #
+          # Measured: 19.2MB emitted, and .next/static at 20.2MB instead of
+          # 926KB. No client chunk imports any of it, so nothing executes and no
+          # secret is exposed — but it is uploaded on every deploy, and an entire
+          # database engine sitting in a browser-reachable directory is not
+          # something to leave lying around on purpose.
+          #
+          # This guard exists because the regression is invisible in review:
+          # nothing in the source changes, and the diff is 19MB of generated
+          # binary nobody reads.
+          if [ -d .next/static/media ]; then
+            echo "::error::Bundled assets were emitted into the publicly-served static directory."
+            du -sh .next/static/media
+            ls -la .next/static/media
+            echo "::error::If this is PGlite it must be listed in serverExternalPackages in next.config.ts."
+            exit 1
+          fi
+
+          echo "No bundled assets in the public static directory. OK"
