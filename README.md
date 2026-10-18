@@ -30,6 +30,14 @@ Honest state of the build. Nothing below is aspirational.
 - [Client Implementation Report](./docs/CLIENT-IMPLEMENTATION-REPORT.md) — feasibility, privacy, security, dependencies, decisions, and acceptance criteria.
 - [Client Implementation Report PDF](./docs/CLIENT-IMPLEMENTATION-REPORT.pdf) — shareable client-facing version.
 
+### Foundation primitives
+
+- `backend/src/lib/integration-security.ts` provides HMAC request signing, timestamp checks, nonce validation, and idempotency fingerprints for the future merchant API.
+- `backend/src/lib/pricing-engine.ts` calculates delivery prices with `bigint` minor units and returns a versioned breakdown suitable for an immutable quote snapshot.
+- `backend/src/lib/marketplace-entitlements.ts` centralises subscription/grace-period enforcement so marketplace access is not dependent on UI hiding.
+- `backend/src/lib/notification-safety.ts` builds privacy-minimised pickup notifications and rejects unsafe action URLs and line-break injection.
+- `tests/foundation-primitives.test.ts` covers the security and business-rule regressions for these modules.
+
 Run `npm run check` for the full gate: typecheck, lint, contrast, migrations,
 tests.
 

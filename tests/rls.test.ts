@@ -70,7 +70,7 @@ describe("anonymous access", () => {
   it("sees only ACTIVE service areas", async () => {
     const n = await count(
       db,
-      "select count(*)::int c from public.service_areas where is_active"
+      "select count(*)::int c from public.service_area_coverage"
     );
     expect(n).toBe(3);
   });

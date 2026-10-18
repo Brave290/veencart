@@ -237,3 +237,45 @@ describe("append-only history", () => {
 
   }, 30_000);
 });
+
+describe("hardening controls", () => {
+  it("removes browser policies that could forge money or orders", async () => {
+    const policies = await db.query(
+      `select tablename, policyname
+         from pg_policies
+        where schemaname = 'public'
+          and policyname in ('product_orders_customer_insert', 'payments_admin_update')`
+    );
+    expect(policies.rows).toEqual([]);
+  });
+
+  it("exposes coverage through a pricing-safe projection", async () => {
+    const columns = await db.query(
+      `select column_name
+         from information_schema.columns
+        where table_schema = 'public' and table_name = 'service_area_coverage'`
+    );
+    const names = (columns.rows as { column_name: string }[]).map((r) => r.column_name);
+    expect(names).toEqual(expect.arrayContaining(['id', 'name', 'state', 'lga', 'localities', 'service_types']));
+    expect(names).not.toContain('base_fee_minor');
+    expect(names).not.toContain('per_kg_minor');
+  });
+
+  it("enforces one purpose-matching resource per guest token", async () => {
+    const constraint = await db.query(
+      `select conname from pg_constraint
+        where conrelid = 'public.guest_access_tokens'::regclass
+          and conname = 'guest_access_tokens_target_xor_check'`
+    );
+    expect(constraint.rows).toHaveLength(1);
+  });
+
+  it("protects refund identity and deletion", async () => {
+    const trigger = await db.query(
+      `select tgname from pg_trigger
+        where tgrelid = 'public.refunds'::regclass
+          and tgname = 'refunds_identity_guard'`
+    );
+    expect(trigger.rows).toHaveLength(1);
+  });
+});
