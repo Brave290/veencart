@@ -24,6 +24,12 @@ Honest state of the build. Nothing below is aspirational.
 | Paystack, R2, email | **Not built** | blocked on client credentials |
 | Playwright browser tests | **Written, unrunnable here** | see Known limitations |
 
+### Client and integration documents
+
+- [Merchant Integration API](./docs/MERCHANT-INTEGRATION-API.md) — external checkout, delivery-payment handoff, webhooks, idempotency, and owner notifications.
+- [Client Implementation Report](./docs/CLIENT-IMPLEMENTATION-REPORT.md) — feasibility, privacy, security, dependencies, decisions, and acceptance criteria.
+- [Client Implementation Report PDF](./docs/CLIENT-IMPLEMENTATION-REPORT.pdf) — shareable client-facing version.
+
 Run `npm run check` for the full gate: typecheck, lint, contrast, migrations,
 tests.
 
